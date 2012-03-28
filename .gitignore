@@ -9,3 +9,9 @@ FinalProjectGameProg/*.*.s
 FinalProjectGameProg/*.vhw
 FinalProjectGameProg/*.vhw.bak
 .gitignore~
+FinalProjectGamePro/makefile
+FinalProjectGamePro/main.bak
+FinalProjectGamePro/*.elf
+FinalProjectGamePro/*.gba
+FinalProjectGamePro/*.who
+
