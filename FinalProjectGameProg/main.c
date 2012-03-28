@@ -1,3 +1,5 @@
+// Test git comment in notepad++
+
 #include "gba.h"
 #include "robotsprite.h"
 #include <math.h>
