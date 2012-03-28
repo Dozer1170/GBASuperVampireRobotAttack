@@ -1,3 +1,7 @@
+FinalProjectGameProg/*.i
+FinalProjectGameProg/*.o
+FinalProjectGameProg/*.a
+FinalProjectGameProg/*.s
 FinalProjectGameProg/*.*.i
 FinalProjectGameProg/*.*.a
 FinalProjectGameProg/*.*.o
