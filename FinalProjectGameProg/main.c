@@ -1,7 +1,7 @@
 #include "gba.h"
 #include "robotsprite.h"
 #include <math.h>
-
+//comment somewhere
 #define MAP_PIXEL_X_MAX 1600
 #define MAP_PIXEL_Y_MAX 2400
 #define LEVEL_ONE_WIDTH 400
