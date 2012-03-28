@@ -1,0 +1,7 @@
+FinalProjectGameProg/*.*.i
+FinalProjectGameProg/*.*.a
+FinalProjectGameProg/*.*.o
+FinalProjectGameProg/*.*.s
+FinalProjectGameProg/*.vhw
+FinalProjectGameProg/*.vhw.bak
+.gitignore~

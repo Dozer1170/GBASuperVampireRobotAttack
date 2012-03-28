@@ -9,18 +9,18 @@ include $(HAMDIR)/system/master.mak
 #
 # Set the name of your desired GBA image name here
 #
-PROGNAME=FinalProjectGBAProg
+PROGNAME=FinalGPAProj
 
 #
 # Set a list of files you want to compile
 #
-OFILES +=../SpriteCharacter/levelone.map.o	\
-	../SpriteCharacter/levelone.pal.o	\
-	../SpriteCharacter/levelone.raw.o	\
-	../SpriteCharacter/levelonehitmap.map.o	\
-	../SpriteCharacter/levelonelandscape.map.o	\
-	../SpriteCharacter/main.o	\
-	../SpriteCharacter/sinlut.o
+OFILES +=levelone.map.o	\
+	levelone.pal.o	\
+	levelone.raw.o	\
+	levelonehitmap.map.o	\
+	levelonelandscape.map.o	\
+	main.o	\
+	sinlut.o
 
 #
 # Set a list of libraries you want to link
