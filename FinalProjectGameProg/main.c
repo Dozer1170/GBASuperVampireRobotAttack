@@ -1,13 +1,15 @@
-// Test git comment in notepad++
-
 #include "gba.h"
 #include "robotsprite.h"
 #include <math.h>
-#define MAP_PIXEL_X_MAX 1600
-#define MAP_PIXEL_Y_MAX 2400
-#define LEVEL_ONE_WIDTH 400
-#define LEVEL_ONE_HEIGHT 300
+
+#define MAP_PIXEL_X_MAX 2160
+#define MAP_PIXEL_Y_MAX 740
+#define LEVEL_WIDTH 300
+#define LEVEL_HEIGHT 100
 #define LANDSCAPE_WIDTH 30
+#define FACTORY_MAP_SIZE 30000
+#define FACTORY_PALETTE_SIZE 256
+#define FACTORY_TILE_SET_SIZE 7232
 
 #define GROUND 0
 #define AIR 1
@@ -15,24 +17,23 @@
 #define MAIN_HANDLER spriteHandlers[0]
 #define MAIN_SPRITE sprites[0]
 
-extern const u16 levelone_Map[];
-extern const u16 levelonehitmap_Map[];
-extern const u16 levelone_Palette[];
-extern const u8 levelone_Tiles[];
-extern const u16 levelonelandscape_Map[];
-extern const short sin_lut[];
+extern const u16 factoryhitmap_Map[];
+extern const u16 factorylevel_Map[];
+extern const u16 factorylevel_Palette[];
+extern const u8 factorylevel_Tiles[];
 
-u16* levelOneMap =(u16*)ScreenBaseBlock(30);
-u16* levelOneHitMap = (u16*)ScreenBaseBlock(20);
-u16* levelOneLandscapeMap = (u16*)ScreenBaseBlock(15);
+//extern const u16 levellandscape_Map[];
+
+const u16 *levelhitmap_Map;
+const u16 *level_Map;
+const u16 *level_Palette;
+const u8 *level_Tiles;
+
+u16* levelMap =(u16*)ScreenBaseBlock(30);
+u16* levelHitMap = (u16*)ScreenBaseBlock(20);
+u16* levelLandscapeMap = (u16*)ScreenBaseBlock(15);
 
 volatile u32 *BUTTONS = (volatile u32*)0x04000130;
-
-inline s32 lu_sin(u32 theta)
-{   return sin_lut[(theta>>7)&0x1FF];   }
-
-inline s32 lu_cos(u32 theta)
-{   return sin_lut[((theta>>7)+128)&0x1FF]; }
 
 typedef struct tagSprite
 {
@@ -103,7 +104,7 @@ typedef struct BgInfo {
 	int yPrevRow;
 } BgInfo;
 
-BgInfo world, levelOne;
+BgInfo bg, level;
 
 u16 __key_curr=0, __key_prev=0;
 
@@ -179,17 +180,22 @@ void InitMaps() {
     REG_BG1CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (15 << SCREEN_SHIFT);
 	REG_BG2CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (20 << SCREEN_SHIFT);
 
- 	levelOne.x = 16, levelOne.y = 16;
-	levelOne.dx = 0, levelOne.dy = 0;
-	levelOne.backgroundNextCol = 33, levelOne.backgroundPrevCol = 0;
-	levelOne.backgroundNextRow = 33, levelOne.backgroundPrevRow = 0;
-	levelOne.xNextCol = 1;
-	levelOne.xPrevCol = 0;
-	levelOne.yNextRow = 1;
-	levelOne.yPrevRow = 0;
+	levelhitmap_Map = factoryhitmap_Map;
+	level_Map = factorylevel_Map;
+	level_Palette = factorylevel_Palette;
+	level_Tiles = factorylevel_Tiles;
+
+ 	level.x = 16, level.y = 16;
+	level.dx = 0, level.dy = 0;
+	level.backgroundNextCol = 33, level.backgroundPrevCol = 0;
+	level.backgroundNextRow = 33, level.backgroundPrevRow = 0;
+	level.xNextCol = 1;
+	level.xPrevCol = 0;
+	level.yNextRow = 1;
+	level.yPrevRow = 0;
 	
-	REG_BG0VOFS = levelOne.y;
-	REG_BG0HOFS = levelOne.x;
+	REG_BG0VOFS = level.y;
+	REG_BG0HOFS = level.x;
 	REG_BG1VOFS = 0;
 	REG_BG1HOFS = 0;
 
@@ -197,19 +203,19 @@ void InitMaps() {
 
 	for(i = 1; i < 33; i++)
 	{
-		copyColumn(i, levelOne.yPrevRow + 1, levelOne.backgroundPrevCol + 1, i,
-			levelOneHitMap, levelonehitmap_Map, LEVEL_ONE_WIDTH);
+		copyColumn(i, level.yPrevRow + 1, level.backgroundPrevCol + 1, i,
+			levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
 	}
 	for(i = 1; i < 33; i++)
 	{
-		copyColumn(i, levelOne.yPrevRow + 1, levelOne.backgroundPrevCol + 1, i,
-			levelOneMap, levelone_Map, LEVEL_ONE_WIDTH);
+		copyColumn(i, level.yPrevRow + 1, level.backgroundPrevCol + 1, i,
+			levelMap, level_Map, LEVEL_WIDTH);
 	}
-	for(i = 0; i < 32; i++)
+/*	for(i = 0; i < 32; i++)
 	{
 		copyColumn(i, 0, 0, i,
-			levelOneLandscapeMap, levelonelandscape_Map, LANDSCAPE_WIDTH);
-	}
+			levelLandscapeMap, levellandscape_Map, LANDSCAPE_WIDTH);
+	}*/
 }
 
 void InitSprites() {
@@ -253,23 +259,24 @@ void InitSprites() {
 	MAIN_HANDLER.angle.cosAngle = 1;
 	MAIN_HANDLER.angle.sinAngle = 0;
 	MAIN_HANDLER.angle.slopeFactor = 0;
-	MAIN_HANDLER.worldx = MAIN_HANDLER.x + levelOne.x;
-	MAIN_HANDLER.worldy = MAIN_HANDLER.y + levelOne.y;
+	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
+	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
 	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
 	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
 }
 
 void Initialize() {
-	SetMode(0x0 | BG0_ENABLE | BG1_ENABLE |
-		 BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
+	SetMode(0x0 | BG0_ENABLE | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
 	InitMaps();
 	InitSprites();
 }
 
 void LoadContent() {
-	DMAFastCopy((void*)levelone_Palette,(void*)BGPaletteMem,256,DMA_16NOW);
-	DMAFastCopy((void*)levelone_Tiles,(void*)CharBaseBlock(0),7744/4,DMA_32NOW);
+	DMAFastCopy((void*)level_Palette,(void*)BGPaletteMem,
+		FACTORY_PALETTE_SIZE,DMA_16NOW);
+	DMAFastCopy((void*)level_Tiles,(void*)CharBaseBlock(0),
+		FACTORY_TILE_SET_SIZE/4,DMA_32NOW);
 	DMAFastCopy((void*)robotspritePalette,(void*)SpritePal,256,DMA_16NOW);
 
 	int n;
@@ -281,34 +288,34 @@ void moveViewport() {
 	int nx = MAIN_HANDLER.worldx - 120 + MAIN_HANDLER.width/2;
   	if(MAIN_HANDLER.worldx < MAP_PIXEL_X_MAX && MAIN_HANDLER.worldx > 119 + MAIN_HANDLER.width/2)
 	{
-     	levelOne.dx += nx - levelOne.x;
-	    levelOne.x = nx;
+     	level.dx += nx - level.x;
+	    level.x = nx;
 	}
 	int ny = MAIN_HANDLER.worldy - 80 + MAIN_HANDLER.height/2;
 	if(MAIN_HANDLER.worldy < MAP_PIXEL_Y_MAX && MAIN_HANDLER.worldy > 79 + MAIN_HANDLER.height/2)
 	{
-     	levelOne.dy += ny - levelOne.y;
-	    levelOne.y = ny;
+     	level.dy += ny - level.y;
+	    level.y = ny;
 	}
 }
 
 void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
 	if(x >= 0 && x < MAP_PIXEL_X_MAX) {
 	    sprite->worldx = x;
-	    sprite->x = sprite->worldx - levelOne.x;
+	    sprite->x = sprite->worldx - level.x;
 	}
 
 	if(y >= 0 && y < MAP_PIXEL_Y_MAX) {
 	    sprite->worldy = y;
-	    sprite->y = sprite->worldy - levelOne.y;
+	    sprite->y = sprite->worldy - level.y;
 	}
 }
 
 //Checks a single pixel if there is a solid object
 bool checkSolidCollision(int x, int y) {
 	bool rval = 0;
-	u16 tileStart = levelonehitmap_Map[(x/8) + (LEVEL_ONE_WIDTH * (y/8))] * 64;
-	u8 pixel = levelone_Tiles[tileStart + (x%8) + (8*(y%8))];
+	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
+	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
 	if(9 == pixel || 10 == pixel || 4 == pixel) {
 		rval = 1;
 	}
@@ -319,21 +326,21 @@ bool checkSolidCollision(int x, int y) {
 //angle values based upon what it it
 bool checkSolidCollisionSet(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
-	u16 tileStart = levelonehitmap_Map[(x/8) + (LEVEL_ONE_WIDTH * (y/8))] * 64;
-	u8 pixel = levelone_Tiles[tileStart + (x%8) + (8*(y%8))];
-	if(9 == pixel) {
+	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
+	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
+	if(2 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = 0;
 		sprite->angle.cosAngle = 1;
 		sprite->angle.slopeFactor = 0;
 	}
-	if(10 == pixel) {
+	if(4 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = .7;
 		sprite->angle.cosAngle = .7;
 		sprite->angle.slopeFactor = .15;
 	}
-	if(4 == pixel) {
+	if(5 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = .7;
 		sprite->angle.cosAngle = .7;
@@ -465,90 +472,90 @@ void Update() {
 }
 
 void DrawLevelBackground() {
-    if(levelOne.dx > 7)
+    if(level.dx > 7)
 	{
-		int inc = levelOne.dx / 8;
-		levelOne.dx = levelOne.dx % 8;
+		int inc = level.dx / 8;
+		level.dx = level.dx % 8;
 		int i;
 		for(i = 0; i < inc; i++) {
-			copyColumn(levelOne.xNextCol, levelOne.yPrevRow + 1,
-				levelOne.backgroundPrevRow + 1, levelOne.backgroundNextCol,
-				levelOneMap, levelone_Map, LEVEL_ONE_WIDTH);
-			copyColumn(levelOne.xNextCol, levelOne.yPrevRow + 1,
-				levelOne.backgroundPrevRow + 1, levelOne.backgroundNextCol,
-				levelOneHitMap, levelonehitmap_Map, LEVEL_ONE_WIDTH);
-			levelOne.backgroundPrevCol++;
-			levelOne.backgroundNextCol++;
-			levelOne.xNextCol = (levelOne.xNextCol + 1) % 32;
-			levelOne.xPrevCol = (levelOne.xPrevCol + 1) % 32;
+			copyColumn(level.xNextCol, level.yPrevRow + 1,
+				level.backgroundPrevRow + 1, level.backgroundNextCol,
+				levelMap, level_Map, LEVEL_WIDTH);
+			copyColumn(level.xNextCol, level.yPrevRow + 1,
+				level.backgroundPrevRow + 1, level.backgroundNextCol,
+				levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
+			level.backgroundPrevCol++;
+			level.backgroundNextCol++;
+			level.xNextCol = (level.xNextCol + 1) % 32;
+			level.xPrevCol = (level.xPrevCol + 1) % 32;
 		}
 	}
-	if(levelOne.dx < -7)
+	if(level.dx < -7)
 	{
-     	int inc = abs(levelOne.dx / 8);
-		levelOne.dx = levelOne.dx % 8;
+     	int inc = abs(level.dx / 8);
+		level.dx = level.dx % 8;
 		int i;
 		for(i = 0; i < inc; i++) {
-			copyColumn(levelOne.xPrevCol, levelOne.yPrevRow + 1,
-				levelOne.backgroundPrevRow + 1, levelOne.backgroundPrevCol,
-				levelOneMap, levelone_Map, LEVEL_ONE_WIDTH);
-			copyColumn(levelOne.xPrevCol, levelOne.yPrevRow + 1,
-				levelOne.backgroundPrevRow + 1, levelOne.backgroundPrevCol,
-				levelOneHitMap, levelonehitmap_Map, LEVEL_ONE_WIDTH);
-			levelOne.backgroundNextCol--;
-			levelOne.backgroundPrevCol--;
-			if(levelOne.xPrevCol <= 0)
-				levelOne.xPrevCol = 31;
+			copyColumn(level.xPrevCol, level.yPrevRow + 1,
+				level.backgroundPrevRow + 1, level.backgroundPrevCol,
+				levelMap, level_Map, LEVEL_WIDTH);
+			copyColumn(level.xPrevCol, level.yPrevRow + 1,
+				level.backgroundPrevRow + 1, level.backgroundPrevCol,
+				levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
+			level.backgroundNextCol--;
+			level.backgroundPrevCol--;
+			if(level.xPrevCol <= 0)
+				level.xPrevCol = 31;
 			else
-			    levelOne.xPrevCol--;
+			    level.xPrevCol--;
 
-			if(levelOne.xNextCol <= 0)
-			    levelOne.xNextCol = 31;
+			if(level.xNextCol <= 0)
+			    level.xNextCol = 31;
 			else
-			    levelOne.xNextCol--;
+			    level.xNextCol--;
 		}
 	}
-	if(levelOne.dy > 7)
+	if(level.dy > 7)
 	{
 		int i;
-		int inc = levelOne.dy / 8;
-		levelOne.dy = levelOne.dy % 8;
+		int inc = level.dy / 8;
+		level.dy = level.dy % 8;
 	    for(i = 0; i < inc; i++) {
-			copyRow(levelOne.xPrevCol + 1,levelOne.yNextRow,
-				levelOne.backgroundPrevCol + 1, levelOne.backgroundNextRow,
-				levelOneMap, levelone_Map, LEVEL_ONE_WIDTH);
-	  		copyRow(levelOne.xPrevCol + 1,levelOne.yNextRow,
-				levelOne.backgroundPrevCol + 1, levelOne.backgroundNextRow,
-				levelOneHitMap, levelonehitmap_Map, LEVEL_ONE_WIDTH);
-			levelOne.backgroundPrevRow++;
-			levelOne.backgroundNextRow++;
-			levelOne.yNextRow = (levelOne.yNextRow + 1) % 32;
-			levelOne.yPrevRow = (levelOne.yPrevRow + 1) % 32;
+			copyRow(level.xPrevCol + 1,level.yNextRow,
+				level.backgroundPrevCol + 1, level.backgroundNextRow,
+				levelMap, level_Map, LEVEL_WIDTH);
+	  		copyRow(level.xPrevCol + 1,level.yNextRow,
+				level.backgroundPrevCol + 1, level.backgroundNextRow,
+				levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
+			level.backgroundPrevRow++;
+			level.backgroundNextRow++;
+			level.yNextRow = (level.yNextRow + 1) % 32;
+			level.yPrevRow = (level.yPrevRow + 1) % 32;
 		}
 	}
-	if(levelOne.dy < -7)
+	if(level.dy < -7)
 	{
 		int i;
-  		int inc = abs(levelOne.dy / 8);
-		levelOne.dy = levelOne.dy % 8;
+  		int inc = abs(level.dy / 8);
+		level.dy = level.dy % 8;
 		for(i = 0; i < inc; i++) {
-			copyRow(levelOne.xPrevCol + 1,levelOne.yPrevRow,
-				levelOne.backgroundPrevCol + 1, levelOne.backgroundPrevRow,
-				levelOneMap, levelone_Map, LEVEL_ONE_WIDTH);
-			copyRow(levelOne.xPrevCol + 1,levelOne.yPrevRow,
-				levelOne.backgroundPrevCol + 1, levelOne.backgroundPrevRow,
-				levelOneHitMap, levelonehitmap_Map, LEVEL_ONE_WIDTH);
-			levelOne.backgroundNextRow--;
-			levelOne.backgroundPrevRow--;
-			if(levelOne.yPrevRow <= 0)
-				levelOne.yPrevRow = 31;
+			copyRow(level.xPrevCol + 1,level.yPrevRow,
+				level.backgroundPrevCol + 1, level.backgroundPrevRow,
+				levelMap, level_Map, LEVEL_WIDTH);
+			copyRow(level.xPrevCol + 1,level.yPrevRow,
+				level.backgroundPrevCol + 1, level.backgroundPrevRow,
+				levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
+			level.backgroundNextRow--;
+			level.backgroundPrevRow--;
+			if(level.yPrevRow <= 0)
+				level.yPrevRow = 31;
 			else
-			    levelOne.yPrevRow--;
+			    level.yPrevRow--;
 
-			if(levelOne.yNextRow <= 0)
-			    levelOne.yNextRow = 31;
+			if(level.yNextRow <= 0)
+			    level.yNextRow = 31;
 			else
-			    levelOne.yNextRow--;
+			    level.yNextRow--;
 		}
 	}
 }
@@ -557,10 +564,10 @@ void Draw() {
     WaitVBlank();
 	UpdateSpriteMemory();
 	DrawLevelBackground();
-	REG_BG0VOFS = levelOne.y;
-	REG_BG0HOFS = levelOne.x;
-	REG_BG2VOFS = levelOne.y;
-	REG_BG2HOFS = levelOne.x;
+	REG_BG0VOFS = level.y;
+	REG_BG0HOFS = level.x;
+	REG_BG2VOFS = level.y;
+	REG_BG2HOFS = level.x;
 }
 
 int main()
