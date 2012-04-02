@@ -1,5 +1,5 @@
 #include "gba.h"
-#include "robotsprite.h"
+#include "sprite/robotsprite.h"
 #include <math.h>
 
 #define MAP_PIXEL_X_MAX 2160
