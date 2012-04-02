@@ -145,3 +145,41 @@ typedef unsigned short u16;
 typedef unsigned int u32;
 typedef int s32;
 typedef short s16;
+
+
+
+void DMAFastCopy(void* source, void* dest, u32 count,
+    u32 mode)
+{
+    if (mode == DMA_16NOW || mode == DMA_32NOW)
+    {
+    	REG_DMA3SAD = (u32)source;
+        REG_DMA3DAD = (u32)dest;
+        REG_DMA3CNT = count | mode;
+    }
+}
+
+
+// Update OAM
+void UpdateSpriteMemory(void)
+{
+	DMAFastCopy((void*)sprites, (void*)SpriteMem, 512, DMA_16NOW);
+}
+
+
+
+// Wait for the vertical refresh
+void WaitVBlank(void)
+{
+	while(REG_VCOUNT >= 160);
+	while(REG_VCOUNT < 160);
+}
+
+
+// Check the status of button pushes
+inline void ButtonPoll()
+{
+	__key_prev = __key_curr;
+	__key_curr = ~*BUTTONS & KEY_MASK;
+}
+

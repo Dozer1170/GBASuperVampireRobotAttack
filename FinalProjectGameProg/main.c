@@ -1,6 +1,8 @@
 #include "gba.h"
-#include "sprite/robotsprite.h"
 #include <math.h>
+#include "sprite/robotsprite.h"
+#include "sprite/sprite.c"
+#include "init.c"
 
 #define MAP_PIXEL_X_MAX 2160
 #define MAP_PIXEL_Y_MAX 740
@@ -65,12 +67,31 @@ typedef struct tagAngleInfo {
 	float slopeFactor;
 } AngleInfo;
 
+
+typedef struct HitBox
+{
+	// From the left
+	int xOffset;
+	
+	// From the top
+	int yOffset;
+	
+	// From the right
+	int negXOffset;
+	
+	// From the bottom
+	int negYOffset;
+	
+	int width;
+	int height;
+} HitBox
+
+
 typedef struct tagSpriteHandler
 {
 	int x, y;
 	int mode;
 	int worldx, worldy;
-	int size;
 	float acc, dec, xspd, yspd;
 	float gspd, maxGspd;
 	int width, height;
@@ -82,6 +103,7 @@ typedef struct tagSpriteHandler
 	AnimationHandler running;
 	AnimationHandler jumpUp;
 	AnimationHandler jumpDown;
+	HitBox hitBox;
 } SpriteHandler;
 
 int NextFrameLocation(AnimationHandler *handler) {
@@ -108,12 +130,6 @@ BgInfo bg, level;
 
 u16 __key_curr=0, __key_prev=0;
 
-inline void ButtonPoll()
-{
-	__key_prev = __key_curr;
-	__key_curr = ~*BUTTONS & KEY_MASK;
-}
-
 inline u32 key_curr_state()         {   return __key_curr;          }
 inline u32 key_prev_state()         {   return __key_prev;          }
 inline u32 key_is_down(u32 key)     {   return  __key_curr & key;   }
@@ -127,22 +143,7 @@ inline u32 key_held(u32 key)
 inline u32 key_hit(u32 key)
 {   return ( __key_curr &~ __key_prev) & key;  }
 
-void WaitVBlank(void)
-{
-	while(REG_VCOUNT >= 160);
-	while(REG_VCOUNT < 160);
-}
 
-void DMAFastCopy(void* source, void* dest, u32 count,
-    u32 mode)
-{
-    if (mode == DMA_16NOW || mode == DMA_32NOW)
-    {
-    	REG_DMA3SAD = (u32)source;
-        REG_DMA3DAD = (u32)dest;
-        REG_DMA3CNT = count | mode;
-    }
-}
 
 //ScreenXCol: the column in our 256x256 background to copy to
 //bgColumn: the column from the background map we would like to copy from
@@ -170,101 +171,7 @@ void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
 	}
 }
 
-void UpdateSpriteMemory(void)
-{
-	DMAFastCopy((void*)sprites, (void*)SpriteMem, 512, DMA_16NOW);
-}
 
-void InitMaps() {
-    REG_BG0CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (30 << SCREEN_SHIFT);
-    REG_BG1CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (15 << SCREEN_SHIFT);
-	REG_BG2CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (20 << SCREEN_SHIFT);
-
-	levelhitmap_Map = factoryhitmap_Map;
-	level_Map = factorylevel_Map;
-	level_Palette = factorylevel_Palette;
-	level_Tiles = factorylevel_Tiles;
-
- 	level.x = 16, level.y = 16;
-	level.dx = 0, level.dy = 0;
-	level.backgroundNextCol = 33, level.backgroundPrevCol = 0;
-	level.backgroundNextRow = 33, level.backgroundPrevRow = 0;
-	level.xNextCol = 1;
-	level.xPrevCol = 0;
-	level.yNextRow = 1;
-	level.yPrevRow = 0;
-	
-	REG_BG0VOFS = level.y;
-	REG_BG0HOFS = level.x;
-	REG_BG1VOFS = 0;
-	REG_BG1HOFS = 0;
-
-	int i;
-
-	for(i = 1; i < 33; i++)
-	{
-		copyColumn(i, level.yPrevRow + 1, level.backgroundPrevCol + 1, i,
-			levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
-	}
-	for(i = 1; i < 33; i++)
-	{
-		copyColumn(i, level.yPrevRow + 1, level.backgroundPrevCol + 1, i,
-			levelMap, level_Map, LEVEL_WIDTH);
-	}
-/*	for(i = 0; i < 32; i++)
-	{
-		copyColumn(i, 0, 0, i,
-			levelLandscapeMap, levellandscape_Map, LANDSCAPE_WIDTH);
-	}*/
-}
-
-void InitSprites() {
-    int n;
-	for(n = 0; n < 128; n++)
-	{
-		sprites[n].attribute0 = 160;
-		sprites[n].attribute1 = 240;
-	}
-	
-	MAIN_HANDLER.alive = 1;
-	MAIN_HANDLER.flipped = 0;
-	MAIN_HANDLER.width = 32;
-	MAIN_HANDLER.height = 32;
-	MAIN_HANDLER.standing.frameLocation[0] = 0;
-	MAIN_HANDLER.standing.frameLocation[1] = 32;
-	MAIN_HANDLER.running.frameLocation[0] = 64;
-	MAIN_HANDLER.running.frameLocation[1] = 96;
-	MAIN_HANDLER.jumpUp.frameLocation[0] = 128;
-	MAIN_HANDLER.jumpUp.frameLocation[1] = 160;
-	MAIN_HANDLER.jumpDown.frameLocation[0] = 192;
-	MAIN_HANDLER.jumpDown.frameLocation[1] = 224;
-	MAIN_HANDLER.standing.currFrame = 0;
-	MAIN_HANDLER.running.currFrame = 0;
-	MAIN_HANDLER.jumpUp.currFrame = 0;
-	MAIN_HANDLER.jumpDown.currFrame = 0;
-	MAIN_HANDLER.standing.numFrames = 2;
-	MAIN_HANDLER.running.numFrames = 2;
-	MAIN_HANDLER.jumpUp.numFrames = 2;
-	MAIN_HANDLER.jumpDown.numFrames = 2;
-	MAIN_HANDLER.x = 50;
-	MAIN_HANDLER.y = 50;
-	MAIN_HANDLER.xspd = 0;
-	MAIN_HANDLER.yspd = 0;
-	MAIN_HANDLER.gspd = 0;
-	MAIN_HANDLER.maxGspd = 4;
-	MAIN_HANDLER.acc = .25;
-	MAIN_HANDLER.dec = 0;
-	MAIN_HANDLER.mode = AIR;
-	MAIN_HANDLER.dir = 1;
-	MAIN_HANDLER.angle.cosAngle = 1;
-	MAIN_HANDLER.angle.sinAngle = 0;
-	MAIN_HANDLER.angle.slopeFactor = 0;
-	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
-	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
-	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
-	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
-	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
-}
 
 void Initialize() {
 	SetMode(0x0 | BG0_ENABLE | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
@@ -272,17 +179,6 @@ void Initialize() {
 	InitSprites();
 }
 
-void LoadContent() {
-	DMAFastCopy((void*)level_Palette,(void*)BGPaletteMem,
-		FACTORY_PALETTE_SIZE,DMA_16NOW);
-	DMAFastCopy((void*)level_Tiles,(void*)CharBaseBlock(0),
-		FACTORY_TILE_SET_SIZE/4,DMA_32NOW);
-	DMAFastCopy((void*)robotspritePalette,(void*)SpritePal,256,DMA_16NOW);
-
-	int n;
-	for(n = 0; n < 4096; n++)
-		SpriteData[n] = robotspriteData[n];
-}
 
 void moveViewport() {
 	int nx = MAIN_HANDLER.worldx - 120 + MAIN_HANDLER.width/2;
@@ -299,17 +195,6 @@ void moveViewport() {
 	}
 }
 
-void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
-	if(x >= 0 && x < MAP_PIXEL_X_MAX) {
-	    sprite->worldx = x;
-	    sprite->x = sprite->worldx - level.x;
-	}
-
-	if(y >= 0 && y < MAP_PIXEL_Y_MAX) {
-	    sprite->worldy = y;
-	    sprite->y = sprite->worldy - level.y;
-	}
-}
 
 //Checks a single pixel if there is a solid object
 bool checkSolidCollision(int x, int y) {
@@ -368,32 +253,7 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 	return nextY;
 }
 
-void move(SpriteHandler *sprite, int x, int y) {
-	if(sprite->mode == GROUND) {
-		if(!checkSolidCollision(((sprite->flipped) ? x :
-		    	 x + sprite->width - 4), y + 4)) {
-	        int newY;
-	        newY = checkABSensors(sprite,x,y);
-	     	moveViewport();
-			setSpriteLoc(sprite,x,newY);
-		}
-	} else if(sprite->mode == AIR) {
-     	if(checkSolidCollision(((sprite->flipped) ? x :
-		    	 x + sprite->width - 4), y + 4)) {
-			x = sprite->worldx;
-		}
-        int newY =  checkABSensors(sprite,x,y);
-		if(newY == y || sprite->yspd < 0) { //in air
-			moveViewport();
-			setSpriteLoc(sprite,x,y);
-		} else { //landed
-			sprite->mode = GROUND;
-			sprite->yspd = 0;
-			moveViewport();
-			setSpriteLoc(sprite,x,newY);
-		}
-	}
-}
+
 
 void Update() {
     ButtonPoll();
