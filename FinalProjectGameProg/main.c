@@ -172,6 +172,14 @@ void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
 }
 
 
+// Update OAM
+void UpdateSpriteMemory(void)
+{
+	DMAFastCopy((void*)sprites, (void*)SpriteMem, 512, DMA_16NOW);
+}
+
+
+
 
 void Initialize() {
 	SetMode(0x0 | BG0_ENABLE | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);

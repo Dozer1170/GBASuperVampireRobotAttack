@@ -160,13 +160,6 @@ void DMAFastCopy(void* source, void* dest, u32 count,
 }
 
 
-// Update OAM
-void UpdateSpriteMemory(void)
-{
-	DMAFastCopy((void*)sprites, (void*)SpriteMem, 512, DMA_16NOW);
-}
-
-
 
 // Wait for the vertical refresh
 void WaitVBlank(void)
