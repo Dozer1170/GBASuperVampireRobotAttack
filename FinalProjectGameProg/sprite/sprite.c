@@ -2,6 +2,7 @@
 bool checkSolidCollision(int x, int y);
 bool checkSolidCollisionSet(SpriteHandler *sprite, int x, int y);
 int checkABSensors(SpriteHandler *sprite, int nextX, int nextY);
+void moveViewport();
 
 // Spawn a sprite on the screen
 void spawnSprite()
@@ -52,4 +53,5 @@ void move(SpriteHandler *sprite, int x, int y) {
 
 bool spriteCollision(sprite1, sprite1VelX, sprite1VelY, sprite2, sprite2VelX, sprite2VelY)
 {
+	return false;
 }
