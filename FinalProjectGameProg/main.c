@@ -1,110 +1,26 @@
 #include "gba.h"
 #include <math.h>
+#include "maps.h"
+#include "sprite/sprite.h"
 #include "sprite/robotsprite.h"
-#include "sprite/sprite.c"
 #include "init.c"
+#include "sprite/sprite.c"
 
-#define MAP_PIXEL_X_MAX 2160
-#define MAP_PIXEL_Y_MAX 740
-#define LEVEL_WIDTH 300
-#define LEVEL_HEIGHT 100
+
 #define LANDSCAPE_WIDTH 30
 #define FACTORY_MAP_SIZE 30000
-#define FACTORY_PALETTE_SIZE 256
-#define FACTORY_TILE_SET_SIZE 7232
 
-#define GROUND 0
-#define AIR 1
 
-#define MAIN_HANDLER spriteHandlers[0]
-#define MAIN_SPRITE sprites[0]
 
+
+
+//extern const u16 levellandscape_Map[];
 extern const u16 factoryhitmap_Map[];
 extern const u16 factorylevel_Map[];
 extern const u16 factorylevel_Palette[];
 extern const u8 factorylevel_Tiles[];
 
-//extern const u16 levellandscape_Map[];
 
-const u16 *levelhitmap_Map;
-const u16 *level_Map;
-const u16 *level_Palette;
-const u8 *level_Tiles;
-
-u16* levelMap =(u16*)ScreenBaseBlock(30);
-u16* levelHitMap = (u16*)ScreenBaseBlock(20);
-u16* levelLandscapeMap = (u16*)ScreenBaseBlock(15);
-
-volatile u32 *BUTTONS = (volatile u32*)0x04000130;
-
-typedef struct tagSprite
-{
-	u16 attribute0;
-	u16 attribute1;
-	u16 attribute2;
-	s16 attribute3;
-} ALIGN4 Sprite,*pSprite;
-
-typedef struct OBJ_AFFINE
-{
-    u16 fill0[3];
-    s16 pa;
-    u16 fill1[3];
-    s16 pb;
-    u16 fill2[3];
-    s16 pc;
-    u16 fill3[3];
-    s16 pd;
-} ALIGN4 OBJ_AFFINE;
-
-typedef struct tagAnimationHandler {
-	int numFrames, currFrame;
-	int frameLocation[2];
-} AnimationHandler;
-
-typedef struct tagAngleInfo {
-	float cosAngle, sinAngle;
-	float slopeFactor;
-} AngleInfo;
-
-
-typedef struct HitBox
-{
-	// From the left
-	int xOffset;
-	
-	// From the top
-	int yOffset;
-	
-	// From the right
-	int negXOffset;
-	
-	// From the bottom
-	int negYOffset;
-	
-	int width;
-	int height;
-} HitBox
-
-
-typedef struct tagSpriteHandler
-{
-	int x, y;
-	int mode;
-	int worldx, worldy;
-	float acc, dec, xspd, yspd;
-	float gspd, maxGspd;
-	int width, height;
-	int alive;
-	int dir;
-	int flipped;
-	AngleInfo angle;
-	AnimationHandler standing;
-	AnimationHandler running;
-	AnimationHandler jumpUp;
-	AnimationHandler jumpDown;
-	HitBox hitBox;
-} SpriteHandler;
 
 int NextFrameLocation(AnimationHandler *handler) {
 	if(handler->currFrame >= handler->numFrames - 1)
@@ -112,64 +28,7 @@ int NextFrameLocation(AnimationHandler *handler) {
 	return handler->frameLocation[++handler->currFrame];
 }
 
-Sprite sprites[128];
-SpriteHandler spriteHandlers[128];
 
-typedef struct BgInfo {
-    int x, y ;
-	int dx, dy;
-	int backgroundNextCol, backgroundPrevCol;
-	int backgroundNextRow, backgroundPrevRow;
-	int xNextCol;
-	int xPrevCol;
-	int yNextRow;
-	int yPrevRow;
-} BgInfo;
-
-BgInfo bg, level;
-
-u16 __key_curr=0, __key_prev=0;
-
-inline u32 key_curr_state()         {   return __key_curr;          }
-inline u32 key_prev_state()         {   return __key_prev;          }
-inline u32 key_is_down(u32 key)     {   return  __key_curr & key;   }
-inline u32 key_is_up(u32 key)       {   return ~__key_curr & key;   }
-inline u32 key_was_down(u32 key)    {   return  __key_prev & key;   }
-inline u32 key_was_up(u32 key)      {   return ~__key_prev & key;   }
-inline u32 key_released(u32 key)
-{   return (~__key_curr &  __key_prev) & key;  }
-inline u32 key_held(u32 key)
-{   return ( __key_curr &  __key_prev) & key;  }
-inline u32 key_hit(u32 key)
-{   return ( __key_curr &~ __key_prev) & key;  }
-
-
-
-//ScreenXCol: the column in our 256x256 background to copy to
-//bgColumn: the column from the background map we would like to copy from
-void copyColumn(int screenXCol, int screenYOff, int bgYOff, int bgColumn,
-	u16* toMap, const u16* fromMap, int mapWidth)
-{
-	screenXCol = screenXCol % 32;
-	int i;
-	for(i = 0; i < 32; i++)
-	{
-		toMap[screenXCol + ((i+screenYOff)%32) * 32] =
-			fromMap[bgColumn+(mapWidth*(i+bgYOff))];
-	}
-}
-//ScreenYRow: the row in our 256x256 background to copy to
-//bgRow: the row from the background map we would like to copy from
-void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
-	u16* toMap, const u16* fromMap, int mapWidth)
-{
-	int i;
-	for(i = 0; i < 32; i++)
-	{
-		toMap[((i+screenXOff)%32) + screenYRow * 32] =
-			fromMap[(bgXOff + i) + (mapWidth*bgRow)];
-	}
-}
 
 
 // Update OAM

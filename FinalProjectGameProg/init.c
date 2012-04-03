@@ -1,3 +1,25 @@
+#include "BackgroundSource/factoryhitmap.map.c"
+#include "BackgroundSource/factoryhitmap.raw.c"
+
+#include "BackgroundSource/factorylevel.map.c"
+#include "BackgroundSource/factorylevel.raw.c"
+
+#include "BackgroundSource/factorylevel.pal.c"
+
+// Variables
+const u16 *level_Palette;
+const u8 *level_Tiles;
+
+const u16 *levelhitmap_Map;
+const u16 *level_Map;
+
+BgInfo bg, level;
+
+
+u16* levelMap =(u16*)ScreenBaseBlock(30);
+u16* levelHitMap = (u16*)ScreenBaseBlock(20);
+u16* levelLandscapeMap = (u16*)ScreenBaseBlock(15);
+
 
 // Loads the tiles and palettes
 void LoadContent() {

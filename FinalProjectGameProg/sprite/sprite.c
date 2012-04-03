@@ -1,13 +1,13 @@
-void spawnSprite(int spriteNum, int xPositionScreen, int yPositionScreen, int xMapPosition, int yMapPosition, int size)
+// Function prototypes
+bool checkSolidCollision(int x, int y);
+bool checkSolidCollisionSet(SpriteHandler *sprite, int x, int y);
+int checkABSensors(SpriteHandler *sprite, int nextX, int nextY);
+
+// Spawn a sprite on the screen
+void spawnSprite()
 {
-	spriteHandlers[spriteNum].x = xPositionScreen;
-	spriteHandlers[spriteNum].y = yPositionScreen;
-	
-	spriteHandlers[spriteNum].xMapPosition = level.x + xPosition;
-	spriteHandlers[spriteNum].xMapPosition = level.y + yPosition;
-	
-	
 }
+
 
 
 void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
@@ -50,7 +50,6 @@ void move(SpriteHandler *sprite, int x, int y) {
 	}
 }
 
-boolean spriteCollision(sprite1, sprite1VelX, sprite1VelY, sprite2, sprite2VelX, sprite2VelY)
+bool spriteCollision(sprite1, sprite1VelX, sprite1VelY, sprite2, sprite2VelX, sprite2VelY)
 {
-
 }

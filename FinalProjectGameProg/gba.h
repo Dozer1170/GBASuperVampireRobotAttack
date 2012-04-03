@@ -148,6 +148,32 @@ typedef short s16;
 
 
 
+// Button things
+volatile u32 *BUTTONS = (volatile u32*)0x04000130;
+u16 __key_curr=0, __key_prev=0;
+
+// Polling functions
+inline u32 key_curr_state()         {   return __key_curr;          }
+inline u32 key_prev_state()         {   return __key_prev;          }
+inline u32 key_is_down(u32 key)     {   return  __key_curr & key;   }
+inline u32 key_is_up(u32 key)       {   return ~__key_curr & key;   }
+inline u32 key_was_down(u32 key)    {   return  __key_prev & key;   }
+inline u32 key_was_up(u32 key)      {   return ~__key_prev & key;   }
+inline u32 key_released(u32 key)
+{   return (~__key_curr &  __key_prev) & key;  }
+inline u32 key_held(u32 key)
+{   return ( __key_curr &  __key_prev) & key;  }
+inline u32 key_hit(u32 key)
+{   return ( __key_curr &~ __key_prev) & key;  }
+
+// Check the status of buttons
+inline void ButtonPoll()
+{
+	__key_prev = __key_curr;
+	__key_curr = ~*BUTTONS & KEY_MASK;
+}
+
+
 void DMAFastCopy(void* source, void* dest, u32 count,
     u32 mode)
 {
@@ -169,10 +195,6 @@ void WaitVBlank(void)
 }
 
 
-// Check the status of button pushes
-inline void ButtonPoll()
-{
-	__key_prev = __key_curr;
-	__key_curr = ~*BUTTONS & KEY_MASK;
-}
+
+
 
