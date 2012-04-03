@@ -185,16 +185,10 @@ void DMAFastCopy(void* source, void* dest, u32 count,
     }
 }
 
-
-
 // Wait for the vertical refresh
 void WaitVBlank(void)
 {
 	while(REG_VCOUNT >= 160);
 	while(REG_VCOUNT < 160);
 }
-
-
-
-
 

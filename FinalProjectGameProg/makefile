@@ -14,13 +14,18 @@ PROGNAME=FinalGPAProj
 #
 # Set a list of files you want to compile
 #
-OFILES +=main.o	\
+OFILES += main.o	\
 	sinlut.o	\
 	BackgroundSource/factoryhitmap.map.o	\
 	BackgroundSource/factoryhitmap.raw.o	\
 	BackgroundSource/factorylevel.map.o	\
 	BackgroundSource/factorylevel.pal.o	\
-	BackgroundSource/factorylevel.raw.o
+	BackgroundSource/factorylevel.raw.o	
+
+
+
+
+
 
 #
 # Set a list of libraries you want to link
@@ -48,4 +53,4 @@ include $(HAMDIR)/system/standard-targets.mak
 
 ##########################################################################################
 # Add custom makefile targets here
-##########################################################################################
+#####################################################################################

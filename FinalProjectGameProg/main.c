@@ -1,6 +1,7 @@
 #include "gba.h"
 #include <math.h>
 #include "maps.h"
+<<<<<<< refs/remotes/origin/master
 #include "sprite/sprite.h"
 #include "sprite/robotsprite.h"
 #include "init.c"
@@ -32,12 +33,20 @@ int NextFrameLocation(AnimationHandler *handler) {
 
 
 // Update OAM
+=======
+#include "sprite.h"
+#include "sprite/robotsprite.h"
+
+>>>>>>> HEAD~0
 void UpdateSpriteMemory(void)
 {
 	DMAFastCopy((void*)sprites, (void*)SpriteMem, 512, DMA_16NOW);
 }
+<<<<<<< refs/remotes/origin/master
 
 
+=======
+>>>>>>> HEAD~0
 
 
 void Initialize() {
@@ -46,6 +55,18 @@ void Initialize() {
 	InitSprites();
 }
 
+// Loads the tiles and palettes
+void LoadContent() {
+	DMAFastCopy((void*)level_Palette,(void*)BGPaletteMem,
+		FACTORY_PALETTE_SIZE,DMA_16NOW);
+	DMAFastCopy((void*)level_Tiles,(void*)CharBaseBlock(0),
+		FACTORY_TILE_SET_SIZE/4,DMA_32NOW);
+	DMAFastCopy((void*)robotspritePalette,(void*)SpritePal,256,DMA_16NOW);
+
+	int n;
+	for(n = 0; n < 4096; n++)
+		SpriteData[n] = robotspriteData[n];
+}
 
 void moveViewport() {
 	int nx = MAIN_HANDLER.worldx - 120 + MAIN_HANDLER.width/2;
@@ -62,73 +83,13 @@ void moveViewport() {
 	}
 }
 
-
-//Checks a single pixel if there is a solid object
-bool checkSolidCollision(int x, int y) {
-	bool rval = 0;
-	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
-	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
-	if(9 == pixel || 10 == pixel || 4 == pixel) {
-		rval = 1;
-	}
-	return rval;
-}
-
-//Checks a single pixel if there is a solid object and sets sprites
-//angle values based upon what it it
-bool checkSolidCollisionSet(SpriteHandler *sprite, int x, int y) {
-	bool rval = 0;
-	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
-	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
-	if(2 == pixel) {
-		rval = 1;
-		sprite->angle.sinAngle = 0;
-		sprite->angle.cosAngle = 1;
-		sprite->angle.slopeFactor = 0;
-	}
-	if(4 == pixel) {
-		rval = 1;
-		sprite->angle.sinAngle = .7;
-		sprite->angle.cosAngle = .7;
-		sprite->angle.slopeFactor = .15;
-	}
-	if(5 == pixel) {
-		rval = 1;
-		sprite->angle.sinAngle = .7;
-		sprite->angle.cosAngle = .7;
-		sprite->angle.slopeFactor = -.15;
-	}
-	return rval;
-}
-
-//returns the 'topmost' y value where there is a collision
-//on the left and right side of the sprite
-int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
-	int i;
-	int leftX = nextX + 2;
-	int rightX = nextX + sprite->width - 4;
-	int y = nextY + sprite->height/2;
-	int max = sprite->height/2 + 8;
-	for(i = 0; i < max; i++) {
-		if(checkSolidCollisionSet(sprite,leftX,y+i)) {
-			return y+i-sprite->height;
-		}
-  		if(checkSolidCollisionSet(sprite,rightX,y+i)) {
-			return y+i-sprite->height;
-		}
-	}
-	return nextY;
-}
-
-
-
 void Update() {
     ButtonPoll();
     if(MAIN_HANDLER.mode == GROUND)
     {
 		if(key_is_down(KEY_LEFT))
 		{
-			if(!checkSolidCollision(MAIN_HANDLER.worldx+1,
+			if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx+1,
 				MAIN_HANDLER.worldy + 4)) {
 				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
 					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
@@ -142,7 +103,7 @@ void Update() {
 		}
 		if(key_is_down(KEY_RIGHT))
 		{
-	     	if(!checkSolidCollision(MAIN_HANDLER.worldx +
+	     	if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
 			 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
 				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
 					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
@@ -157,7 +118,7 @@ void Update() {
 		if(key_hit(KEY_A))
 		{
 			MAIN_HANDLER.mode = AIR;
-			MAIN_HANDLER.yspd = -5;
+			MAIN_HANDLER.yspd = MAIN_HANDLER.yspd - 5;
 		}
 		MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
 			((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
@@ -288,7 +249,7 @@ void DrawLevelBackground() {
 }
 
 void Draw() {
-    WaitVBlank();
+   WaitVBlank();
 	UpdateSpriteMemory();
 	DrawLevelBackground();
 	REG_BG0VOFS = level.y;
