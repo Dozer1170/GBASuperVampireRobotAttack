@@ -1,53 +1,13 @@
 #include "gba.h"
 #include <math.h>
 #include "maps.h"
-<<<<<<< refs/remotes/origin/master
-#include "sprite/sprite.h"
-#include "sprite/robotsprite.h"
-#include "init.c"
-#include "sprite/sprite.c"
-
-
-#define LANDSCAPE_WIDTH 30
-#define FACTORY_MAP_SIZE 30000
-
-
-
-
-
-//extern const u16 levellandscape_Map[];
-extern const u16 factoryhitmap_Map[];
-extern const u16 factorylevel_Map[];
-extern const u16 factorylevel_Palette[];
-extern const u8 factorylevel_Tiles[];
-
-
-
-int NextFrameLocation(AnimationHandler *handler) {
-	if(handler->currFrame >= handler->numFrames - 1)
-	    handler->currFrame = -1;
-	return handler->frameLocation[++handler->currFrame];
-}
-
-
-
-
-// Update OAM
-=======
 #include "sprite.h"
 #include "sprite/robotsprite.h"
 
->>>>>>> HEAD~0
 void UpdateSpriteMemory(void)
 {
 	DMAFastCopy((void*)sprites, (void*)SpriteMem, 512, DMA_16NOW);
 }
-<<<<<<< refs/remotes/origin/master
-
-
-=======
->>>>>>> HEAD~0
-
 
 void Initialize() {
 	SetMode(0x0 | BG0_ENABLE | BG2_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
