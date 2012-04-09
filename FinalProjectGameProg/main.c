@@ -49,31 +49,57 @@ void Update() {
     {
 		if(key_is_down(KEY_LEFT))
 		{
-			if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx+1,
-				MAIN_HANDLER.worldy + 4)) {
-				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
-					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
+            if( MAIN_HANDLER.dir == -1)
+			{
+		     	if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
+				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
+					if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
+						MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
+				}
+			}
+			else
+			{
+                if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
+				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
+					if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
+						MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
+					else
+						MAIN_HANDLER.dir = -1;
+				}
 			}
 			if(!MAIN_HANDLER.flipped) {
 					MAIN_HANDLER.flipped = 1;
 					MAIN_SPRITE.attribute1 =
 						FLIP_LEFT(MAIN_SPRITE.attribute1);
 			}
-			MAIN_HANDLER.dir = -1;
 		}
+
 		if(key_is_down(KEY_RIGHT))
 		{
-	     	if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
-			 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
-				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
-					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
+			if( MAIN_HANDLER.dir == 1)
+			{
+		     	if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
+				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
+					if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
+						MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
+				}
+			}
+			else
+			{
+                if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
+				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4))
+					{
+						if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
+							MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
+						else
+							MAIN_HANDLER.dir = 1;
+					}
 			}
 			if(MAIN_HANDLER.flipped) {
 					MAIN_HANDLER.flipped = 0;
 					MAIN_SPRITE.attribute1 =
 						FLIP_RIGHT(MAIN_SPRITE.attribute1);
 			}
-			MAIN_HANDLER.dir = 1;
 		}
 		if(key_hit(KEY_A))
 		{
@@ -91,7 +117,7 @@ void Update() {
 			MAIN_HANDLER.dir;
 		if(MAIN_HANDLER.mode != AIR)
 			MAIN_HANDLER.yspd = (MAIN_HANDLER.gspd*MAIN_HANDLER.angle.sinAngle);
-        
+
         if(MAIN_HANDLER.xspd == 0) {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.standing));
     	} else {
