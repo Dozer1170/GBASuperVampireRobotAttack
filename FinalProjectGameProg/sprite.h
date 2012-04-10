@@ -113,7 +113,7 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
 	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
 	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
-	if(9 == pixel || 10 == pixel || 4 == pixel) {
+	if(1 == pixel || 2 == pixel || 3 == pixel) {
 		rval = 1;
 	}
 	return rval;
@@ -121,7 +121,7 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 
 //Checks a single pixel if there is a solid object and sets sprites
 //angle values based upon what it it
-bool checkSolidCollisionSet(SpriteHandler *sprite, int x, int y) {
+bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
 	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
 	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
@@ -156,15 +156,15 @@ bool checkSolidCollisionSet(SpriteHandler *sprite, int x, int y) {
 //on the left and right side of the sprite
 int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 	int i;
-	int leftX = nextX + 9;
-	int rightX = nextX + sprite->width - 13;
+	int leftX = nextX + 10;
+	int rightX = nextX + sprite->width - 15;
 	int y = nextY + sprite->height/2;
 	int max = sprite->height/2 + 8;
 	for(i = 0; i < max; i++) {
-		if(checkSolidCollisionSet(sprite,leftX,y+i)) {
+		if(checkSolidPixelCollisionSet(sprite,leftX,y+i)) {
 			return y+i-sprite->height;
 		}
-  		if(checkSolidCollisionSet(sprite,rightX,y+i)) {
+  		if(checkSolidPixelCollisionSet(sprite,rightX,y+i)) {
 			return y+i-sprite->height;
 		}
 	}
@@ -172,28 +172,73 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 
 }
 
+//Checks for map collision in a single horizontal line in the middle
+//of the sprite
+//Returns xvalue to set sprite at if there is a collision
+//else returns -1 for no collision
+int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
+   int i;
+   int y = nextY + sprite->height/2;
+   int begin = (sprite->dir == 1) ? nextX + sprite->hitBox.xOffset :
+      nextX + sprite->width - sprite->hitBox.xOffset;
+   int max = sprite->hitBox.negXOffset;
+   if(sprite->dir == 1) {
+      for(i = 0; i < max; i++) {
+     		if(checkSolidCollision(sprite,begin + i,y)) {
+            sprite->gspd = 0;
+   			return begin+i - sprite->width;
+   		}
+   	}
+   } else {
+      for(i = 0; i < max; i++) {
+     		if(checkSolidCollision(sprite,begin - i,y)) {
+            sprite->gspd = 0;
+   			return begin-i;
+   		}
+      }
+   }
+	return -1;
+}
+
+//Checks above the sprite, if there is a collision, set yspd to 0
+//if no collision, returns the place asked to move (nextY)
+int checkDSensor(SpriteHandler *sprite, int nextX, int nextY) {
+   int i;
+   int begin = nextX + sprite->hitBox.xOffset + 1;
+   int max = sprite->hitBox.negXOffset - 1;
+   for(i = 0; i < max; i++) {
+  		if(checkSolidCollision(sprite,begin + i,nextY)) {
+         sprite->yspd = 0;
+         return sprite->worldy;
+		}
+   }
+   return nextY;
+}
+
 void move(SpriteHandler *sprite, int x, int y) {
+   int newX;
 	if(sprite->mode == GROUND) {
-		if(!checkSolidCollision(sprite,((sprite->flipped) ? x :
-		    	 x + sprite->width - 4), y + 4)) {
-	        int newY;
+      int newY = sprite->worldy;
+		if((newX = checkCSensor(sprite, x, y)) == -1) {
 	        newY = checkABSensors(sprite,x,y);
 	        if(newY == -1) {
 				sprite->mode = AIR;
 				sprite->yspd = sprite->yspd + 1;
-			}
-	     	moveViewport();
-			setSpriteLoc(sprite,x,newY);
-		}
+	        }
+		} else {
+         x = newX;
+      }
+	   moveViewport();
+		setSpriteLoc(sprite,x,newY);
 	} else if(sprite->mode == AIR) {
-     	if(checkSolidCollision(sprite,((sprite->flipped) ? x :
-		    	 x + sprite->width - 4), y + 4)) {
-			x = sprite->worldx;
+      if((newX = checkCSensor(sprite,x,y)) != -1) {
+			x = newX;
 		}
-        int newY =  checkABSensors(sprite,x,y);
+      int newY =  checkABSensors(sprite,x,y);
 		if(newY == -1 || sprite->yspd < 0) { //in air
+         newY = checkDSensor(sprite,x,y);
 			moveViewport();
-			setSpriteLoc(sprite,x,y);
+			setSpriteLoc(sprite,x,newY);
 		} else { //landed
 			sprite->mode = GROUND;
 			sprite->yspd = 0;
@@ -249,6 +294,10 @@ void InitSprites() {
 	MAIN_HANDLER.angle.cosAngle = 1;
 	MAIN_HANDLER.angle.sinAngle = 0;
 	MAIN_HANDLER.angle.slopeFactor = 0;
+	MAIN_HANDLER.hitBox.xOffset = 8;
+	MAIN_HANDLER.hitBox.yOffset = 0;
+	MAIN_HANDLER.hitBox.negYOffset = 0;
+	MAIN_HANDLER.hitBox.negXOffset = 25;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;

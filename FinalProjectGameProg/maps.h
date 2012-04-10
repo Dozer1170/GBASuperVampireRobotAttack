@@ -1,8 +1,3 @@
-#include "backgroundSource/factoryhitmap.map.c"
-#include "backgroundSource/factoryhitmap.raw.c"
-#include "backgroundSource/factorylevel.map.c"
-#include "backgroundSource/factorylevel.pal.c"
-#include "backgroundSource/factorylevel.raw.c"
 //Defines
 #define FACTORY_TILE_SET_SIZE 7232
 #define FACTORY_PALETTE_SIZE 256
