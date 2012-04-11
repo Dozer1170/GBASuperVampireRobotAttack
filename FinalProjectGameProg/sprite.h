@@ -179,21 +179,21 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
    int i;
    int y = nextY + sprite->height/2;
-   int begin = (sprite->dir == 1) ? nextX + sprite->hitBox.xOffset :
-      nextX + sprite->width - sprite->hitBox.xOffset;
-   int max = sprite->hitBox.negXOffset;
+   int max = sprite->width - (sprite->hitBox.negXOffset + sprite->hitBox.xOffset);
    if(sprite->dir == 1) {
+      int begin = nextX + sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
      		if(checkSolidCollision(sprite,begin + i,y)) {
             sprite->gspd = 0;
-   			return begin+i - sprite->width;
+   			return begin + i + sprite->hitBox.negXOffset - sprite->width;
    		}
    	}
    } else {
+      int begin = nextX + sprite->width - sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
      		if(checkSolidCollision(sprite,begin - i,y)) {
             sprite->gspd = 0;
-   			return begin-i;
+   			return begin - i - sprite->hitBox.negXOffset + 2;
    		}
       }
    }
@@ -297,7 +297,7 @@ void InitSprites() {
 	MAIN_HANDLER.hitBox.xOffset = 8;
 	MAIN_HANDLER.hitBox.yOffset = 0;
 	MAIN_HANDLER.hitBox.negYOffset = 0;
-	MAIN_HANDLER.hitBox.negXOffset = 25;
+	MAIN_HANDLER.hitBox.negXOffset = 6;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;

@@ -30,16 +30,18 @@ void LoadContent() {
 
 void moveViewport() {
 	int nx = MAIN_HANDLER.worldx - 120 + MAIN_HANDLER.width/2;
-  	if(MAIN_HANDLER.worldx < MAP_PIXEL_X_MAX && MAIN_HANDLER.worldx > 119 + MAIN_HANDLER.width/2)
+  	if(MAIN_HANDLER.worldx < MAP_PIXEL_X_MAX - 136
+      && MAIN_HANDLER.worldx > 119 + MAIN_HANDLER.width/2)
 	{
      	level.dx += nx - level.x;
-	    level.x = nx;
+	   level.x = nx;
 	}
 	int ny = MAIN_HANDLER.worldy - 80 + MAIN_HANDLER.height/2;
-	if(MAIN_HANDLER.worldy < MAP_PIXEL_Y_MAX && MAIN_HANDLER.worldy > 79 + MAIN_HANDLER.height/2)
+	if(MAIN_HANDLER.worldy < MAP_PIXEL_Y_MAX - 96
+      && MAIN_HANDLER.worldy > 79 + MAIN_HANDLER.height/2)
 	{
      	level.dy += ny - level.y;
-	    level.y = ny;
+	   level.y = ny;
 	}
 }
 
@@ -49,23 +51,17 @@ void Update() {
     {
 		if(key_is_down(KEY_LEFT))
 		{
-            if( MAIN_HANDLER.dir == -1)
+         if( MAIN_HANDLER.dir == -1)
 			{
-		     	if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
-				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
-					if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
-						MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
-				}
+				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
+					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
 			}
 			else
 			{
-                if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
-				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
-					if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
-						MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
-					else
-						MAIN_HANDLER.dir = -1;
-				}
+				if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
+					MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
+				else
+					MAIN_HANDLER.dir = -1;
 			}
 			if(!MAIN_HANDLER.flipped) {
 					MAIN_HANDLER.flipped = 1;
@@ -78,22 +74,15 @@ void Update() {
 		{
 			if( MAIN_HANDLER.dir == 1)
 			{
-		     	if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
-				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4)) {
-					if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
-						MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
-				}
+				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
+					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
 			}
 			else
 			{
-                if(!checkSolidCollision(&MAIN_HANDLER,MAIN_HANDLER.worldx +
-				 	MAIN_HANDLER.width - 4, MAIN_HANDLER.worldy + 4))
-					{
-						if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
-							MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
-						else
-							MAIN_HANDLER.dir = 1;
-					}
+				if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
+					MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
+				else
+					MAIN_HANDLER.dir = 1;
 			}
 			if(MAIN_HANDLER.flipped) {
 					MAIN_HANDLER.flipped = 0;
