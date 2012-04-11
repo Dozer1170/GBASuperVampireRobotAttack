@@ -116,15 +116,46 @@ void Update() {
 	
 	if(MAIN_HANDLER.mode == AIR)
 	{
-		if(MAIN_HANDLER.yspd < 10)
-			MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
-			
-		if(MAIN_HANDLER.yspd < 0) {
-            MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
-		} else {
-            MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpDown));
+	    if( key_is_down( KEY_A ) )
+	    {
+                MAIN_HANDLER.xspd -= MAIN_HANDLER.xspd/4;
+	            MAIN_HANDLER.yspd = -1;
+	            if( key_is_down( KEY_RIGHT ) )
+	            {
+	                MAIN_HANDLER.dir = 1;
+	                MAIN_HANDLER.xspd = 2;
+	                
+	                if(MAIN_HANDLER.flipped) {
+    					MAIN_HANDLER.flipped = 0;
+    					MAIN_SPRITE.attribute1 =
+    						FLIP_RIGHT(MAIN_SPRITE.attribute1);
+    			     }
+                }
+                if( key_is_down( KEY_LEFT ) )
+                {
+                    MAIN_HANDLER.dir = -1;
+                    MAIN_HANDLER.xspd = -2;
+                    
+         			if(!MAIN_HANDLER.flipped) {
+					MAIN_HANDLER.flipped = 1;
+					MAIN_SPRITE.attribute1 =
+						FLIP_LEFT(MAIN_SPRITE.attribute1);
+			     }
+            }
+        }
+        else
+        {
+    		if(MAIN_HANDLER.yspd < 10)
+    			MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
+    			
+    		if(MAIN_HANDLER.yspd < 0) {
+                MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
+    		} else {
+                MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpDown));
+    		}
 		}
 	}
+	
 	
 	move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
 		MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);

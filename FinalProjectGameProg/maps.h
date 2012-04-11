@@ -1,3 +1,8 @@
+#include "backgroundSource/factoryhitmap.map.c"
+#include "backgroundSource/factoryhitmap.raw.c"
+#include "backgroundSource/factorylevel.map.c"
+#include "backgroundSource/factorylevel.pal.c"
+#include "backgroundSource/factorylevel.raw.c"
 //Defines
 #define FACTORY_TILE_SET_SIZE 7232
 #define FACTORY_PALETTE_SIZE 256
@@ -14,10 +19,10 @@
 #define FACTORY_MAP_SIZE 30000
 
 //extern const u16 levellandscape_Map[];
-extern const u16 factoryhitmap_Map[];
-extern const u16 factorylevel_Map[];
-extern const u16 factorylevel_Palette[];
-extern const u8 factorylevel_Tiles[];
+//extern const u16 factoryhitmap_Map[];
+//extern const u16 factorylevel_Map[];
+//extern const u16 factorylevel_Palette[];
+//extern const u8 factorylevel_Tiles[];
 
 const u16 *levelhitmap_Map;
 const u16 *level_Map;
