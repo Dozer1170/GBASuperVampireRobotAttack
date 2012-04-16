@@ -1,42 +1,22 @@
-#include "backgroundSource/factoryhitmap.map.c"
-#include "backgroundSource/factoryhitmap.raw.c"
-#include "backgroundSource/factorylevel.map.c"
-#include "backgroundSource/factorylevel.pal.c"
-#include "backgroundSource/factorylevel.raw.c"
-
+#include "BackgroundSource/factoryhitmap.map.c"
+#include "BackgroundSource/factoryhitmap.raw.c"
+#include "BackgroundSource/factorylevel.map.c"
+#include "BackgroundSource/factorylevel.pal.c"
+#include "BackgroundSource/factorylevel.raw.c"
+#include "BackgroundSource/factorybg.map.c"
 //Defines
-#define FACTORY_TILE_SET_SIZE 7232
-#define FACTORY_PALETTE_SIZE 256
+#define FACTORY_TILE_SET_SIZE 9280
 
-#define GROUND 0
-#define AIR 1
-
-#define LEVEL_WIDTH 300
-#define LEVEL_HEIGHT 100
-
-#define MAP_PIXEL_X_MAX 2400
-#define MAP_PIXEL_Y_MAX 800
-#define LANDSCAPE_WIDTH 30
-#define FACTORY_MAP_SIZE 30000
-
-//extern const u16 levellandscape_Map[];
-//extern const u16 factoryhitmap_Map[];
-//extern const u16 factorylevel_Map[];
-//extern const u16 factorylevel_Palette[];
-//extern const u8 factorylevel_Tiles[];
-
-const u16 *levelhitmap_Map;
-const u16 *level_Map;
 const u16 *level_Palette;
 const u8 *level_Tiles;
 
 u16* levelMap =(u16*)ScreenBaseBlock(30);
 u16* levelHitMap = (u16*)ScreenBaseBlock(20);
-u16* levelLandscapeMap = (u16*)ScreenBaseBlock(15);
+u16* levelBgMap = (u16*)ScreenBaseBlock(15);
 
 // Typedefs
 typedef struct BgInfo {
-   int x, y ;
+   int x, y;
 	int dx, dy;
 	int backgroundNextCol, backgroundPrevCol;
 	int backgroundNextRow, backgroundPrevRow;
@@ -44,9 +24,16 @@ typedef struct BgInfo {
 	int xPrevCol;
 	int yNextRow;
 	int yPrevRow;
+	int levelWidth; //Num of 8x8 tiles in one row of map
+	int levelHeight; //Num of 8x8 tiles in one column of map
+	int pixelXMax; //Max distance the camera can move in x direction
+	int pixelYMax; //Max distance the camera can move in y direction
+	int mapSize; //Num entries in array in a *.map.c
+   const u16* srcMap; //Where values will be copied from
+   u16* destMap; //Where values will be copied to
 } BgInfo;
 
-BgInfo bg, level;
+BgInfo bg, level, hitmap;
 
 //ScreenXCol: the column in our 256x256 background to copy to
 //bgColumn: the column from the background map we would like to copy from
@@ -75,12 +62,10 @@ void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
 }
 
 void InitMaps() {
-    REG_BG0CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (30 << SCREEN_SHIFT);
-    REG_BG1CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (15 << SCREEN_SHIFT);
+   REG_BG0CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (30 << SCREEN_SHIFT);
+   REG_BG1CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (15 << SCREEN_SHIFT);
 	REG_BG2CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (20 << SCREEN_SHIFT);
 
-	levelhitmap_Map = factoryhitmap_Map;
-	level_Map = factorylevel_Map;
 	level_Palette = factorylevel_Palette;
 	level_Tiles = factorylevel_Tiles;
 
@@ -92,27 +77,125 @@ void InitMaps() {
 	level.xPrevCol = 0;
 	level.yNextRow = 1;
 	level.yPrevRow = 0;
+	level.levelWidth = 300;
+	level.levelHeight = 100;
+	level.pixelXMax = 2400;
+	level.pixelYMax = 800;
+	level.mapSize = 30000;
+	level.srcMap = factorylevel_Map;
+	level.destMap = levelMap;
+
+	hitmap.levelWidth = 300;
+	hitmap.levelHeight = 100;
+	hitmap.pixelXMax = 2400;
+	hitmap.pixelYMax = 800;
+	hitmap.mapSize = 30000;
+	hitmap.srcMap = factoryhitmap_Map;
+	hitmap.destMap = levelHitMap;
+	
+	bg.x = 16, bg.y = 16;
+	bg.dx = 0, bg.dy = 0;
+	bg.backgroundNextCol = 33, bg.backgroundPrevCol = 0;
+	bg.backgroundNextRow = 33, bg.backgroundPrevRow = 0;
+	bg.xNextCol = 1;
+	bg.xPrevCol = 0;
+	bg.yNextRow = 1;
+	bg.yPrevRow = 0;
+	bg.levelWidth = 150;
+	bg.levelHeight = 50;
+   bg.srcMap = factorybg_Map;
+   bg.destMap = levelBgMap;
+	//PixelXMax and PixelYMax not important for far background
 
 	REG_BG0VOFS = level.y;
 	REG_BG0HOFS = level.x;
-	REG_BG1VOFS = 0;
-	REG_BG1HOFS = 0;
+	REG_BG1VOFS = bg.y;
+	REG_BG1HOFS = bg.x;
 
 	int i;
 
 	for(i = 1; i < 33; i++)
 	{
 		copyColumn(i, level.yPrevRow + 1, level.backgroundPrevCol + 1, i,
-			levelHitMap, levelhitmap_Map, LEVEL_WIDTH);
+			level.destMap, level.srcMap, level.levelWidth);
 	}
 	for(i = 1; i < 33; i++)
 	{
-		copyColumn(i, level.yPrevRow + 1, level.backgroundPrevCol + 1, i,
-			levelMap, level_Map, LEVEL_WIDTH);
+		copyColumn(i, bg.yPrevRow + 1, bg.backgroundPrevCol + 1, i,
+			bg.destMap, bg.srcMap, bg.levelWidth);
 	}
-/*	for(i = 0; i < 32; i++)
-	{
-		copyColumn(i, 0, 0, i,
-			levelLandscapeMap, levellandscape_Map, LANDSCAPE_WIDTH);
-	}*/
+}
+
+void moveBackgroundRight(BgInfo *currLevel) {
+   int inc = currLevel->dx / 8;
+	currLevel->dx = currLevel->dx % 8;
+	int i;
+	for(i = 0; i < inc; i++) {
+		copyColumn(currLevel->xNextCol, currLevel->yPrevRow + 1,
+			currLevel->backgroundPrevRow + 1, currLevel->backgroundNextCol,
+			currLevel->destMap, currLevel->srcMap, currLevel->levelWidth);
+		currLevel->backgroundPrevCol++;
+		currLevel->backgroundNextCol++;
+		currLevel->xNextCol = (currLevel->xNextCol + 1) % 32;
+		currLevel->xPrevCol = (currLevel->xPrevCol + 1) % 32;
+	}
+}
+
+void moveBackgroundLeft(BgInfo *currLevel) {
+   int inc = abs(currLevel->dx / 8);
+	currLevel->dx = currLevel->dx % 8;
+	int i;
+	for(i = 0; i < inc; i++) {
+		copyColumn(currLevel->xPrevCol, currLevel->yPrevRow + 1,
+			currLevel->backgroundPrevRow + 1, currLevel->backgroundPrevCol,
+			currLevel->destMap, currLevel->srcMap, currLevel->levelWidth);
+		currLevel->backgroundNextCol--;
+		currLevel->backgroundPrevCol--;
+		if(currLevel->xPrevCol <= 0)
+			currLevel->xPrevCol = 31;
+		else
+		    currLevel->xPrevCol--;
+
+		if(currLevel->xNextCol <= 0)
+		    currLevel->xNextCol = 31;
+		else
+		    currLevel->xNextCol--;
+	}
+}
+
+void moveBackgroundDown(BgInfo *currLevel) {
+   int i;
+	int inc = currLevel->dy / 8;
+	currLevel->dy = currLevel->dy % 8;
+   for(i = 0; i < inc; i++) {
+   	copyRow(currLevel->xPrevCol + 1,currLevel->yNextRow,
+   		currLevel->backgroundPrevCol + 1, currLevel->backgroundNextRow,
+   	   currLevel->destMap, currLevel->srcMap, currLevel->levelWidth);
+   	currLevel->backgroundPrevRow++;
+   	currLevel->backgroundNextRow++;
+   	currLevel->yNextRow = (currLevel->yNextRow + 1) % 32;
+   	currLevel->yPrevRow = (currLevel->yPrevRow + 1) % 32;
+   }
+}
+
+void moveBackgroundUp(BgInfo *currLevel) {
+   int i;
+	int inc = abs(currLevel->dy / 8);
+	currLevel->dy = currLevel->dy % 8;
+	for(i = 0; i < inc; i++) {
+		copyRow(currLevel->xPrevCol + 1,currLevel->yPrevRow,
+			currLevel->backgroundPrevCol + 1, currLevel->backgroundPrevRow,
+			currLevel->destMap, currLevel->srcMap, currLevel->levelWidth);
+		currLevel->backgroundNextRow--;
+		currLevel->backgroundPrevRow--;
+		if(currLevel->yPrevRow <= 0)
+			currLevel->yPrevRow = 31;
+		else
+		    currLevel->yPrevRow--;
+
+		if(currLevel->yNextRow <= 0)
+		    currLevel->yNextRow = 31;
+		else
+		    currLevel->yNextRow--;
+	}
 }

@@ -6,7 +6,8 @@ void moveViewport();
 #define MAIN_HANDLER spriteHandlers[0]
 #define MAIN_SPRITE sprites[0]
 
-
+#define GROUND 0
+#define AIR 1
 
 // Typedefs
 typedef struct tagSprite
@@ -111,12 +112,12 @@ int NextFrameLocation(AnimationHandler *handler) {
 
 
 void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
-	if(x >= 0 && x < MAP_PIXEL_X_MAX) {
+	if(x >= 0 && x < level.pixelXMax) {
 	    sprite->worldx = x;
 	    sprite->x = sprite->worldx - level.x;
 	}
 
-	if(y >= 0 && y < MAP_PIXEL_Y_MAX) {
+	if(y >= 0 && y < level.pixelYMax) {
 	    sprite->worldy = y;
 	    sprite->y = sprite->worldy - level.y;
 	}
@@ -127,7 +128,7 @@ void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
 //Checks a single pixel if there is a solid object
 bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
-	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
+	u16 tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
 	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
 	if(1 == pixel || 2 == pixel || 3 == pixel) {
 		rval = 1;
@@ -141,7 +142,7 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 //angle values based upon what it it
 bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
-	u16 tileStart = levelhitmap_Map[(x/8) + (LEVEL_WIDTH * (y/8))] * 64;
+	u16 tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
 	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
 	if(1 == pixel || 2 == pixel || 3 == pixel) {
 		rval = 1;
@@ -201,25 +202,25 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
    int i;
    int y = nextY + sprite->height/2;
-   int begin = (sprite->dir == 1) ? nextX + sprite->hitBox.xOffset :
-      nextX + sprite->width - sprite->hitBox.xOffset;
-   int max = sprite->hitBox.negXOffset;
+   int max = sprite->width - (sprite->hitBox.negXOffset + sprite->hitBox.xOffset);
    if(sprite->dir == 1) {
+      int begin = nextX + sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
-     		if(checkSolidCollision(sprite,begin + i,y)) {
-            sprite->gspd = 0;
-   			return begin+i - sprite->width;
-   		}
-   	}
+            if(checkSolidCollision(sprite,begin + i,y)) {
+                  sprite->gspd = 0;
+                  return begin + i + sprite->hitBox.negXOffset - sprite->width;
+            }
+        }
    } else {
+      int begin = nextX + sprite->width - sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
-     		if(checkSolidCollision(sprite,begin - i,y)) {
-            sprite->gspd = 0;
-   			return begin-i;
-   		}
+          if(checkSolidCollision(sprite,begin - i,y)) {
+               sprite->gspd = 0;
+               return begin - i - sprite->hitBox.negXOffset + 2;
+          }
       }
    }
-	return -1;
+   return -1;
 }
 
 
@@ -329,7 +330,7 @@ void InitSprites() {
 	MAIN_HANDLER.hitBox.xOffset = 8;
 	MAIN_HANDLER.hitBox.yOffset = 0;
 	MAIN_HANDLER.hitBox.negYOffset = 0;
-	MAIN_HANDLER.hitBox.negXOffset = 25;
+	MAIN_HANDLER.hitBox.negXOffset = 6;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
