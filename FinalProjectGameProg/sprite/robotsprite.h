@@ -1,6 +1,6 @@
 /**********************************************
-*       robotsprite.h                                   *
-*          by dovotos pcx->gba program         *
+*       robotsprite.h                         *
+*          by dovotos pcx->gba program        *
 **********************************************/
 #define  robotsprite_WIDTH   32
 #define  robotsprite_HEIGHT  256
@@ -445,3 +445,6 @@ const u16 robotspritePalette[] = {
                     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
                     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
                     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,};
+					
+
+					

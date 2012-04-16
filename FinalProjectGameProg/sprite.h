@@ -1,8 +1,12 @@
+// Function Prototypes
 void moveViewport();
+
 
 // Defines
 #define MAIN_HANDLER spriteHandlers[0]
 #define MAIN_SPRITE sprites[0]
+
+
 
 // Typedefs
 typedef struct tagSprite
@@ -13,16 +17,14 @@ typedef struct tagSprite
 	s16 attribute3;
 } ALIGN4 Sprite,*pSprite;
 
+
+
 typedef struct tagAnimationHandler {
 	int numFrames, currFrame;
 	int frameLocation[2];
 } AnimationHandler;
 
-int NextFrameLocation(AnimationHandler *handler) {
-	if(handler->currFrame >= handler->numFrames - 1)
-	    handler->currFrame = -1;
-	return handler->frameLocation[++handler->currFrame];
-}
+
 
 typedef struct tagHitBox
 {
@@ -62,6 +64,7 @@ typedef struct tagSpriteHandler
 	int alive;
 	int dir;
 	int flipped;
+	int startChunk;
 	AngleInfo angle;
 	AnimationHandler standing;
 	AnimationHandler running;
@@ -69,6 +72,8 @@ typedef struct tagSpriteHandler
 	AnimationHandler jumpDown;
 	HitBox hitBox;
 } SpriteHandler;
+
+
 
 typedef struct OBJ_AFFINE
 {
@@ -83,15 +88,24 @@ typedef struct OBJ_AFFINE
 } ALIGN4 OBJ_AFFINE;
 
 
+
+
+
+// Global Variables
 // Copy of OAM
 Sprite sprites[128];
 
 // Sprite Handler array
 SpriteHandler spriteHandlers[128];
 
-// Spawn a sprite on the screen
-void spawnSprite()
-{
+
+
+
+
+int NextFrameLocation(AnimationHandler *handler) {
+	if(handler->currFrame >= handler->numFrames - 1)
+	    handler->currFrame = -1;
+	return handler->frameLocation[++handler->currFrame];
 }
 
 
@@ -108,6 +122,8 @@ void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
 	}
 }
 
+
+
 //Checks a single pixel if there is a solid object
 bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
@@ -118,6 +134,8 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 	}
 	return rval;
 }
+
+
 
 //Checks a single pixel if there is a solid object and sets sprites
 //angle values based upon what it it
@@ -152,6 +170,8 @@ bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	return rval;
 }
 
+
+
 //returns the 'topmost' y value where there is a collision
 //on the left and right side of the sprite
 int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
@@ -172,6 +192,8 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 
 }
 
+
+
 //Checks for map collision in a single horizontal line in the middle
 //of the sprite
 //Returns xvalue to set sprite at if there is a collision
@@ -179,26 +201,28 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
    int i;
    int y = nextY + sprite->height/2;
-   int max = sprite->width - (sprite->hitBox.negXOffset + sprite->hitBox.xOffset);
+   int begin = (sprite->dir == 1) ? nextX + sprite->hitBox.xOffset :
+      nextX + sprite->width - sprite->hitBox.xOffset;
+   int max = sprite->hitBox.negXOffset;
    if(sprite->dir == 1) {
-      int begin = nextX + sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
      		if(checkSolidCollision(sprite,begin + i,y)) {
             sprite->gspd = 0;
-   			return begin + i + sprite->hitBox.negXOffset - sprite->width;
+   			return begin+i - sprite->width;
    		}
    	}
    } else {
-      int begin = nextX + sprite->width - sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
      		if(checkSolidCollision(sprite,begin - i,y)) {
             sprite->gspd = 0;
-   			return begin - i - sprite->hitBox.negXOffset + 2;
+   			return begin-i;
    		}
       }
    }
 	return -1;
 }
+
+
 
 //Checks above the sprite, if there is a collision, set yspd to 0
 //if no collision, returns the place asked to move (nextY)
@@ -214,6 +238,8 @@ int checkDSensor(SpriteHandler *sprite, int nextX, int nextY) {
    }
    return nextY;
 }
+
+
 
 void move(SpriteHandler *sprite, int x, int y) {
    int newX;
@@ -248,6 +274,8 @@ void move(SpriteHandler *sprite, int x, int y) {
 	}
 }
 
+
+
 bool spriteCollision(sprite1, sprite1VelX, sprite1VelY, sprite2, sprite2VelX, sprite2VelY)
 {
 	return false;
@@ -255,12 +283,16 @@ bool spriteCollision(sprite1, sprite1VelX, sprite1VelY, sprite2, sprite2VelX, sp
 
 void InitSprites() {
     int n;
+	
+	// Move all sprites off-screen
 	for(n = 0; n < 128; n++)
 	{
 		sprites[n].attribute0 = 160;
 		sprites[n].attribute1 = 240;
 	}
 
+	
+	// Initialize robot sprite
 	MAIN_HANDLER.alive = 1;
 	MAIN_HANDLER.flipped = 0;
 	MAIN_HANDLER.width = 32;
@@ -297,10 +329,20 @@ void InitSprites() {
 	MAIN_HANDLER.hitBox.xOffset = 8;
 	MAIN_HANDLER.hitBox.yOffset = 0;
 	MAIN_HANDLER.hitBox.negYOffset = 0;
-	MAIN_HANDLER.hitBox.negXOffset = 6;
+	MAIN_HANDLER.hitBox.negXOffset = 25;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
 	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
 	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
+	
+	
+	// Initialize health bar sprite
+	sprites[1].attribute0 = TALL | COLOR_256 | 0;
+	sprites[1].attribute1 = SIZE_64 | 0;
+	sprites[1].attribute2 = 256;
+	
+	// Initialize vampire sprite
+	sprites[2].attribute2 = 896;
 }
+

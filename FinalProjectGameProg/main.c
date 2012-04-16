@@ -2,7 +2,13 @@
 #include <math.h>
 #include "maps.h"
 #include "sprite.h"
+
 #include "sprite/robotsprite.h"
+#include "sprite/missile.h"
+#include "sprite/vampire.h"
+#include "sprite/bars.h"
+#include "sprite/powerups.h"
+
 
 void UpdateSpriteMemory(void)
 {
@@ -21,11 +27,44 @@ void LoadContent() {
 		FACTORY_PALETTE_SIZE,DMA_16NOW);
 	DMAFastCopy((void*)level_Tiles,(void*)CharBaseBlock(0),
 		FACTORY_TILE_SET_SIZE/4,DMA_32NOW);
-	DMAFastCopy((void*)robotspritePalette,(void*)SpritePal,256,DMA_16NOW);
+	DMAFastCopy((void*)missilePalette,(void*)SpritePal,256,DMA_16NOW);
 
-	int n;
-	for(n = 0; n < 4096; n++)
-		SpriteData[n] = robotspriteData[n];
+	
+	int n, x, nextSprite = 0;
+	
+	// Load robot sprite data into memory
+	spriteHandlers[0].startChunk = 0;
+	x = 0;
+	for(n = nextSprite; n < nextSprite + SPRITE_DATA32_SQUARE * 8; n++)
+	{
+		SpriteData[n] = robotspriteData[x];
+		x++;
+	}	
+	nextSprite = n;
+	
+	
+	// Load health bar sprite data into memory
+	x = 0;
+	spriteHandlers[1].startChunk = SPRITE_CHUNKS32_SQUARE * 8;
+	for (n = nextSprite; n < nextSprite + SPRITE_DATA64_TALL * 10; n++)
+	{
+		SpriteData[n] = barsData[x];
+		x++;
+	}
+	nextSprite = n;
+	
+	
+	// Load vampire sprite data into memory
+	x = 0;
+	spriteHandlers[2].startChunk = SPRITE_CHUNKS32_SQUARE * 8 + SPRITE_CHUNKS64_TALL * 10;
+	for (n = nextSprite; n < nextSprite + SPRITE_DATA32_SQUARE * 3; n++)
+	{
+		SpriteData[n] = vampireData[x];
+		x++;
+	}
+	nextSprite = n;
+	
+	
 }
 
 void moveViewport() {
@@ -51,7 +90,8 @@ void Update() {
     {
 		if(key_is_down(KEY_LEFT))
 		{
-         if( MAIN_HANDLER.dir == -1)
+			// Main character stuff
+			if( MAIN_HANDLER.dir == -1)
 			{
 				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
 					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc;
@@ -68,10 +108,14 @@ void Update() {
 					MAIN_SPRITE.attribute1 =
 						FLIP_LEFT(MAIN_SPRITE.attribute1);
 			}
+			
+			
 		}
 
+		
 		if(key_is_down(KEY_RIGHT))
-		{
+		{	
+			// Main character stuff
 			if( MAIN_HANDLER.dir == 1)
 			{
 				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
@@ -90,6 +134,8 @@ void Update() {
 						FLIP_RIGHT(MAIN_SPRITE.attribute1);
 			}
 		}
+		
+		
 		if(key_hit(KEY_A))
 		{
 			MAIN_HANDLER.mode = AIR;

@@ -140,6 +140,44 @@
 
 #define ALIGN4 __attribute__((aligned(4)))
 
+
+
+
+
+// Sprite sizes for copying data
+#define SPRITE_DATA8_SQUARE       32
+#define SPRITE_CHUNKS8_SQUARE      2
+#define SPRITE_DATA8_TALL         64
+#define SPRITE_CHUNKS8_TALL        4
+#define SPRITE_DATA8_WIDE         64
+#define SPRITE_CHUNKS8_WIDE        4
+
+#define SPRITE_DATA16_SQUARE     128  
+#define SPRITE_CHUNKS16_SQUARE     8
+#define SPRITE_DATA16_TALL       128
+#define SPRITE_CHUNKS16_TALL       8
+#define SPRITE_DATA16_WIDE       128
+#define SPRITE_CHUNKS16_WIDE       8
+
+#define SPRITE_DATA32_SQUARE     512   
+#define SPRITE_CHUNKS32_SQUARE    32  
+#define SPRITE_DATA32_TALL       256
+#define SPRITE_CHUNKS32_TALL      16
+#define SPRITE_DATA32_WIDE       256
+#define SPRITE_CHUNKS32_WIDE      16
+
+#define SPRITE_DATA64_SQUARE    2048
+#define SPRITE_CHUNKS64_SQUARE   128
+#define SPRITE_DATA64_TALL      1024
+#define SPRITE_CHUNKS64_TALL      64
+#define SPRITE_DATA64_WIDE      1024
+#define SPRITE_CHUNKS64_WIDE      64
+
+
+
+
+
+
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
