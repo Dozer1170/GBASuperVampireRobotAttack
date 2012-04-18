@@ -66,6 +66,7 @@ typedef struct tagSpriteHandler
 	int dir;
 	int flipped;
 	int startChunk;
+	int fuel;
 	AngleInfo angle;
 	AnimationHandler standing;
 	AnimationHandler running;
@@ -333,6 +334,7 @@ void InitSprites() {
 	MAIN_HANDLER.hitBox.negXOffset = 6;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
+	MAIN_HANDLER.fuel = 300;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
 	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
 	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
