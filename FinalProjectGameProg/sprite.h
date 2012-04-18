@@ -22,7 +22,7 @@ typedef struct tagSprite
 
 typedef struct tagAnimationHandler {
 	int numFrames, currFrame;
-	int frameLocation[2];
+	int frameLocation[10];
 } AnimationHandler;
 
 
@@ -68,6 +68,7 @@ typedef struct tagSpriteHandler
 	int startChunk;
 	int fuel;
 	AngleInfo angle;
+	AnimationHandler idle;
 	AnimationHandler standing;
 	AnimationHandler running;
 	AnimationHandler jumpUp;
@@ -344,6 +345,19 @@ void InitSprites() {
 	sprites[1].attribute0 = TALL | COLOR_256 | 0;
 	sprites[1].attribute1 = SIZE_64 | 0;
 	sprites[1].attribute2 = 256;
+
+	SpriteHandlers[1].idle.frameLocation[0] = 256;
+	SpriteHandlers[1].idle.frameLocation[1] = SpriteHandlers[1].idle.frameLocation[0] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[2] = SpriteHandlers[1].idle.frameLocation[1] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[3] = SpriteHandlers[1].idle.frameLocation[2] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[4] = SpriteHandlers[1].idle.frameLocation[3] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[5] = SpriteHandlers[1].idle.frameLocation[4] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[6] = SpriteHandlers[1].idle.frameLocation[5] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[7] = SpriteHandlers[1].idle.frameLocation[6] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[8] = SpriteHandlers[1].idle.frameLocation[7] + SPRITE_CHUNKS64_TALL;
+	SpriteHandlers[1].idle.frameLocation[9] = SpriteHandlers[1].idle.frameLocation[8] + SPRITE_CHUNKS64_TALL;
+
+
 	
 	// Initialize vampire sprite
 	sprites[2].attribute2 = 896;
