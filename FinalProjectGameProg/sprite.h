@@ -132,7 +132,7 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
 	u16 tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
 	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
-	if(1 == pixel || 2 == pixel || 3 == pixel) {
+	if(1 == pixel || 2 == pixel || 3 == pixel || 4 == pixel || 5 == pixel || 6 == pixel) {
 		rval = 1;
 	}
 	return rval;
@@ -182,7 +182,7 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 	int leftX = nextX + 10;
 	int rightX = nextX + sprite->width - 15;
 	int y = nextY + sprite->height/2;
-	int max = sprite->height/2 + 8;
+	int max = sprite->height/2 + 4;
 	for(i = 0; i < max; i++) {
 		if(checkSolidPixelCollisionSet(sprite,leftX,y+i)) {
 			return y+i-sprite->height;
@@ -201,9 +201,10 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 //of the sprite
 //Returns xvalue to set sprite at if there is a collision
 //else returns -1 for no collision
-int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
+int checkCDSensors(SpriteHandler *sprite, int nextX, int nextY) {
    int i;
-   int y = nextY + sprite->height/2;
+   int topY = nextY + 5;
+   int y = nextY + sprite->height/2 + 5;
    int max = sprite->width - (sprite->hitBox.negXOffset + sprite->hitBox.xOffset);
    if(sprite->dir == 1) {
       int begin = nextX + sprite->hitBox.xOffset;
@@ -212,11 +213,19 @@ int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
                   sprite->gspd = 0;
                   return begin + i + sprite->hitBox.negXOffset - sprite->width;
             }
+            if(checkSolidCollision(sprite,begin + i,topY)) {
+                  sprite->gspd = 0;
+                  return begin + i + sprite->hitBox.negXOffset - sprite->width;
+            }
         }
    } else {
       int begin = nextX + sprite->width - sprite->hitBox.xOffset;
       for(i = 0; i < max; i++) {
           if(checkSolidCollision(sprite,begin - i,y)) {
+               sprite->gspd = 0;
+               return begin - i - sprite->hitBox.negXOffset + 2;
+          }
+          if(checkSolidCollision(sprite,begin - i,topY)) {
                sprite->gspd = 0;
                return begin - i - sprite->hitBox.negXOffset + 2;
           }
@@ -229,17 +238,25 @@ int checkCSensor(SpriteHandler *sprite, int nextX, int nextY) {
 
 //Checks above the sprite, if there is a collision, set yspd to 0
 //if no collision, returns the place asked to move (nextY)
-int checkDSensor(SpriteHandler *sprite, int nextX, int nextY) {
+int checkEFSensors(SpriteHandler *sprite, int nextX, int nextY) {
    int i;
-   int begin = nextX + sprite->hitBox.xOffset + 1;
-   int max = sprite->hitBox.negXOffset - 1;
-   for(i = 0; i < max; i++) {
-  		if(checkSolidCollision(sprite,begin + i,nextY)) {
-         sprite->yspd = 0;
-         return sprite->worldy;
+	int leftX = nextX + sprite->hitBox.xOffset + 3;
+	int rightX = nextX + sprite->width - sprite->hitBox.negXOffset - 3;
+	int y = nextY + sprite->height/2;
+	int max = sprite->height/2;
+	for(i = 0; i < max; i++) {
+		if(checkSolidCollision(sprite,leftX,y-i)) {
+         if(sprite->yspd < 0)
+            sprite->yspd = 0;
+			return y-i + 1;
 		}
-   }
-   return nextY;
+  		if(checkSolidCollision(sprite,rightX,y-i)) {
+         if(sprite->yspd < 0)
+            sprite->yspd = 0;
+			return y-i + 1;
+		}
+	}
+	return nextY;
 }
 
 
@@ -248,7 +265,7 @@ void move(SpriteHandler *sprite, int x, int y) {
    int newX;
 	if(sprite->mode == GROUND) {
       int newY = sprite->worldy;
-		if((newX = checkCSensor(sprite, x, y)) == -1) {
+		if((newX = checkCDSensors(sprite, x, y)) == -1) {
 	        newY = checkABSensors(sprite,x,y);
 	        if(newY == -1) {
 				sprite->mode = AIR;
@@ -260,12 +277,12 @@ void move(SpriteHandler *sprite, int x, int y) {
 	   moveViewport();
 		setSpriteLoc(sprite,x,newY);
 	} else if(sprite->mode == AIR) {
-      if((newX = checkCSensor(sprite,x,y)) != -1) {
-			x = newX;
-		}
       int newY =  checkABSensors(sprite,x,y);
 		if(newY == -1 || sprite->yspd < 0) { //in air
-         newY = checkDSensor(sprite,x,y);
+         newY = checkEFSensors(sprite,x,y);
+         if((newX = checkCDSensors(sprite,x,newY)) != -1) {
+			   x = newX;
+		   }
 			moveViewport();
 			setSpriteLoc(sprite,x,newY);
 		} else { //landed

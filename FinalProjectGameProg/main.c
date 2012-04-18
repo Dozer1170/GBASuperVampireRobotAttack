@@ -229,8 +229,7 @@ void Update() {
 		}
 		MAIN_HANDLER.xspd = (MAIN_HANDLER.gspd) * MAIN_HANDLER.dir;
 	}
-	
-	
+
 	move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
 		MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
 	if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)
