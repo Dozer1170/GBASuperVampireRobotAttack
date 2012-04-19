@@ -61,6 +61,7 @@ typedef struct tagSpriteHandler
 	int worldx, worldy;
 	float acc, dec, xspd, yspd;
 	float gspd, maxGspd;
+   float jumpStr;
 	int width, height;
 	int alive;
 	int dir;
@@ -179,8 +180,8 @@ bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 //on the left and right side of the sprite
 int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 	int i;
-	int leftX = nextX + 10;
-	int rightX = nextX + sprite->width - 15;
+	int leftX = nextX + sprite->hitBox.xOffset;
+	int rightX = nextX + sprite->width - sprite->hitBox.negXOffset - 4;
 	int y = nextY + sprite->height/2;
 	int max = sprite->height/2 + 4;
 	for(i = 0; i < max; i++) {
@@ -203,8 +204,8 @@ int checkABSensors(SpriteHandler *sprite, int nextX, int nextY) {
 //else returns -1 for no collision
 int checkCDSensors(SpriteHandler *sprite, int nextX, int nextY) {
    int i;
-   int topY = nextY + 5;
-   int y = nextY + sprite->height/2 + 5;
+   int topY = nextY + sprite->height / 3;
+   int y = nextY + (sprite->height/3) * 2;
    int max = sprite->width - (sprite->hitBox.negXOffset + sprite->hitBox.xOffset);
    if(sprite->dir == 1) {
       int begin = nextX + sprite->hitBox.xOffset;
@@ -248,12 +249,12 @@ int checkEFSensors(SpriteHandler *sprite, int nextX, int nextY) {
 		if(checkSolidCollision(sprite,leftX,y-i)) {
          if(sprite->yspd < 0)
             sprite->yspd = 0;
-			return y-i + 1;
+			return y-i;
 		}
   		if(checkSolidCollision(sprite,rightX,y-i)) {
          if(sprite->yspd < 0)
             sprite->yspd = 0;
-			return y-i + 1;
+			return y-i;
 		}
 	}
 	return nextY;
@@ -346,6 +347,7 @@ void InitSprites() {
 	MAIN_HANDLER.angle.cosAngle = 1;
 	MAIN_HANDLER.angle.sinAngle = 0;
 	MAIN_HANDLER.angle.slopeFactor = 0;
+	MAIN_HANDLER.jumpStr = 5;
 	MAIN_HANDLER.hitBox.xOffset = 8;
 	MAIN_HANDLER.hitBox.yOffset = 0;
 	MAIN_HANDLER.hitBox.negYOffset = 0;
@@ -363,16 +365,16 @@ void InitSprites() {
 	sprites[1].attribute1 = SIZE_64 | 0;
 	sprites[1].attribute2 = 256;
 
-	SpriteHandlers[1].idle.frameLocation[0] = 256;
-	SpriteHandlers[1].idle.frameLocation[1] = SpriteHandlers[1].idle.frameLocation[0] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[2] = SpriteHandlers[1].idle.frameLocation[1] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[3] = SpriteHandlers[1].idle.frameLocation[2] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[4] = SpriteHandlers[1].idle.frameLocation[3] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[5] = SpriteHandlers[1].idle.frameLocation[4] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[6] = SpriteHandlers[1].idle.frameLocation[5] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[7] = SpriteHandlers[1].idle.frameLocation[6] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[8] = SpriteHandlers[1].idle.frameLocation[7] + SPRITE_CHUNKS64_TALL;
-	SpriteHandlers[1].idle.frameLocation[9] = SpriteHandlers[1].idle.frameLocation[8] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[0] = 256;
+	spriteHandlers[1].idle.frameLocation[1] = spriteHandlers[1].idle.frameLocation[0] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[2] = spriteHandlers[1].idle.frameLocation[1] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[3] = spriteHandlers[1].idle.frameLocation[2] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[4] = spriteHandlers[1].idle.frameLocation[3] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[5] = spriteHandlers[1].idle.frameLocation[4] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[6] = spriteHandlers[1].idle.frameLocation[5] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[7] = spriteHandlers[1].idle.frameLocation[6] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[8] = spriteHandlers[1].idle.frameLocation[7] + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[1].idle.frameLocation[9] = spriteHandlers[1].idle.frameLocation[8] + SPRITE_CHUNKS64_TALL;
 
 
 	

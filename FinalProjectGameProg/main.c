@@ -143,10 +143,10 @@ void Update() {
     moveXDir();
     if(MAIN_HANDLER.mode == GROUND)
     {
-		if(key_hit(KEY_A))
+      if(key_hit(KEY_A))
 		{
 			MAIN_HANDLER.mode = AIR;
-			MAIN_HANDLER.yspd = MAIN_HANDLER.yspd - 5;
+			MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
 		}
 		MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
 			((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
