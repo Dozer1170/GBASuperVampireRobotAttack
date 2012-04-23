@@ -143,6 +143,17 @@ void Update() {
     moveXDir();
     if(MAIN_HANDLER.mode == GROUND)
     {
+        if(MAIN_HANDLER.totalFuel < 400)
+        {
+            MAIN_HANDLER.fuel += 1;
+            MAIN_HANDLER.totalFuel += 1;
+        }
+        if(MAIN_HANDLER.fuel > 40)
+        {
+            MAIN_HANDLER.fuel -= 40;
+            sprites[1].attribute2=PrevFrameLocation(&(spriteHandlers[1].idle));
+        }
+            
       if(key_hit(KEY_A))
 		{
 			MAIN_HANDLER.mode = AIR;
@@ -169,67 +180,29 @@ void Update() {
 	
 	if(MAIN_HANDLER.mode == AIR)
 	{
-	    if( key_is_down( KEY_R ) && MAIN_HANDLER.fuel > 0 )
+	    if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
 	    {
-	            MAIN_HANDLER.yspd = -1;
-	            MAIN_HANDLER.fuel -= 1;
+	        if(MAIN_HANDLER.yspd > -2)
+	            MAIN_HANDLER.yspd -= 0.25;
+            MAIN_HANDLER.fuel -= 2;
+            MAIN_HANDLER.totalFuel -= 2;
+            if(MAIN_HANDLER.fuel <= 0 && MAIN_HANDLER.totalFuel > 0) {
+                MAIN_HANDLER.fuel += 40;
+                sprites[1].attribute2=NextFrameLocation(&(spriteHandlers[1].idle));
+            }
         }
         else
         {
             if(MAIN_HANDLER.yspd < 10)
-    			MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
+	    		MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
     			
-    		if(MAIN_HANDLER.yspd < 0) {
+	    	if(MAIN_HANDLER.yspd < 0) {
                 MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
-    		} else {
+	    	} else {
                 MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpDown));
-    		}
+	    	}
 		}
-    		
-		if(key_is_down(KEY_LEFT))
-   		{
-            if( MAIN_HANDLER.dir == -1)
-   			{
-   				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc/4 < MAIN_HANDLER.maxGspd)
-   					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc/4;
-   			}
-   			else
-   			{
-   				if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
-   					MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
-   				else
-   					MAIN_HANDLER.dir = -1;
-   			}
-   			if(!MAIN_HANDLER.flipped) {
-   					MAIN_HANDLER.flipped = 1;
-   					MAIN_SPRITE.attribute1 =
-   						FLIP_LEFT(MAIN_SPRITE.attribute1);
-   			}
-        }
-
-		if(key_is_down(KEY_RIGHT))
-		{
-			if( MAIN_HANDLER.dir == 1)
-			{
-				if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc/4 < MAIN_HANDLER.maxGspd)
-					MAIN_HANDLER.gspd  += MAIN_HANDLER.acc/4;
-			}
-			else
-			{
-				if(MAIN_HANDLER.gspd - (MAIN_HANDLER.acc/2) > 0)
-					MAIN_HANDLER.gspd  -= (MAIN_HANDLER.acc/2);
-				else
-					MAIN_HANDLER.dir = 1;
-			}
-			if(MAIN_HANDLER.flipped) {
-					MAIN_HANDLER.flipped = 0;
-					MAIN_SPRITE.attribute1 =
-						FLIP_RIGHT(MAIN_SPRITE.attribute1);
-			}
-		}
-		MAIN_HANDLER.xspd = (MAIN_HANDLER.gspd) * MAIN_HANDLER.dir;
 	}
-
 	move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
 		MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
 	if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)

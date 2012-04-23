@@ -68,6 +68,8 @@ typedef struct tagSpriteHandler
 	int flipped;
 	int startChunk;
 	int fuel;
+	int totalFuel;
+	int health;
 	AngleInfo angle;
 	AnimationHandler idle;
 	AnimationHandler standing;
@@ -110,6 +112,12 @@ int NextFrameLocation(AnimationHandler *handler) {
 	if(handler->currFrame >= handler->numFrames - 1)
 	    handler->currFrame = -1;
 	return handler->frameLocation[++handler->currFrame];
+}
+
+int PrevFrameLocation(AnimationHandler *handler) {
+	if(handler->currFrame <= 0)
+	    handler->currFrame = handler->numFrames;
+	return handler->frameLocation[--handler->currFrame];
 }
 
 
@@ -354,7 +362,9 @@ void InitSprites() {
 	MAIN_HANDLER.hitBox.negXOffset = 6;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
-	MAIN_HANDLER.fuel = 300;
+	MAIN_HANDLER.fuel = 40;
+	MAIN_HANDLER.totalFuel = 400;
+	MAIN_HANDLER.health = 10;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
 	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
 	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
@@ -365,6 +375,8 @@ void InitSprites() {
 	sprites[1].attribute1 = SIZE_64 | 0;
 	sprites[1].attribute2 = 256;
 
+    spriteHandlers[1].idle.currFrame = 0;
+    spriteHandlers[1].idle.numFrames = 10;
 	spriteHandlers[1].idle.frameLocation[0] = 256;
 	spriteHandlers[1].idle.frameLocation[1] = spriteHandlers[1].idle.frameLocation[0] + SPRITE_CHUNKS64_TALL;
 	spriteHandlers[1].idle.frameLocation[2] = spriteHandlers[1].idle.frameLocation[1] + SPRITE_CHUNKS64_TALL;
