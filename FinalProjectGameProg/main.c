@@ -13,10 +13,11 @@
 
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
-boolean recentlyShot = false;
+int recentlyShot = 0;
 boolean missile = false;
 
 void updateMissile();
+void missileDespawn();
 
 void UpdateSpriteMemory(void)
 {
@@ -356,38 +357,37 @@ int main()
 // Not quite functional yet
 void updateMissile()
 {
-/*	// Shoot a missile
+	// Shoot a missile
 		if (key_hit(KEY_B) && missile == false)
 		{
 			MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
-			recentlyShot = true;
+			recentlyShot = 6;
 			missile = true;
 			missileX = 0;
 			
 			// "Spawn" the missile
 			sprites[3].attribute1 &= 0xFE00;
-			sprites[3].attribute1 |= MAIN_HANDLER.x;
-			spriteHandlers[3].x = MAIN_HANDLER.x;
+			sprites[3].attribute1 |= MAIN_HANDLER.x + 27;
+			spriteHandlers[3].x = MAIN_HANDLER.x + 27;
+			spriteHandlers[3].worldx = MAIN_HANDLER.worldx + 27;
 			
 			sprites[3].attribute0 &= 0xFF00;
-			sprites[3].attribute1 |= MAIN_HANDLER.y;
-			spriteHandlers[3].y = MAIN_HANDLER.y;
+			sprites[3].attribute0 |= MAIN_HANDLER.y + 7;
+			spriteHandlers[3].y = MAIN_HANDLER.y + 7;
+			spriteHandlers[3].worldy = MAIN_HANDLER.worldy + 7;
 			
 			
-			if (MAIN_HANDLER.dir == -1)
+			if (MAIN_HANDLER.flipped == 1)
 			{// Robot facing left
-				if (spriteHandlers[3].dir == -1)
-				{
-					// Already facing the right direction
-				}
-				else 
-				{// Rocket facing right
-					// Flip the rocket
-					sprites[3].attribute1 |= HORIZONTAL_FLIP;
-					spriteHandlers[3].dir = -1;
-				}
+				
+				// Adjust spawn
+				sprites[3].attribute1 -= 27;
+				
+				// Flip the rocket
+				sprites[3].attribute1 |= HORIZONTAL_FLIP;
+				spriteHandlers[3].dir = -1;
 			}
-			else if (MAIN_HANDLER.dir == 1)
+			else if (MAIN_HANDLER.flipped == 0)
 			{// Robot facing right
 				if (spriteHandlers[3].dir == 1)
 				{
@@ -407,7 +407,12 @@ void updateMissile()
 		// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
 		else if (missile == true)
 		{
-			sprites[3].attribute2=NextFrameLocation(&(spriteHandlers[3].running));
+			if (recentlyShot)
+			{
+				MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
+				recentlyShot--;
+			}
+		
 			
 			if (spriteHandlers[3].dir == 1)
 			{//Going right
@@ -423,6 +428,8 @@ void updateMissile()
 					sprites[3].attribute1 |= 160;
 					spriteHandlers[3].y = 160;
 					
+					spriteHandlers[3].xspd = 0;
+				
 					missile = false;
 					missileX = 0;
 				}
@@ -436,7 +443,7 @@ void updateMissile()
 			else
 			{//Going left
 			
-				if (spriteHandlers[3].x > 0)
+				if (spriteHandlers[3].x < 0)
 				{// Hit the left edge
 					// Despawn
 					sprites[3].attribute1 &= 0xFE00;
@@ -447,11 +454,13 @@ void updateMissile()
 					sprites[3].attribute1 |= 160;
 					spriteHandlers[3].y = 160;
 					
+					spriteHandlers[3].xspd = 0;
+					
 					missile = false;
 					missileX = 0;
 				}
 				else
-				{
+				{ 
 					sprites[3].attribute1 -= spriteHandlers[3].xspd;
 					spriteHandlers[3].x -= spriteHandlers[3].xspd;
 				}
@@ -459,19 +468,23 @@ void updateMissile()
 			
 			
 			
-			if (missileX % 4)
+			if (missileX % 8 == 0)
 			{
 				spriteHandlers[3].xspd++;
+				sprites[3].attribute2=NextFrameLocation(&(spriteHandlers[3].running));
 			}
 		
 			missileX++;
 		}
 		// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~
 
-*/		
+		
 } // End updateMissile() function
 
 
-
+void missileDespawn()
+{
+	
+}
 
 

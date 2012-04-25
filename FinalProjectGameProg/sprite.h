@@ -401,6 +401,7 @@ void InitSprites() {
 	spriteHandlers[3].running.frameLocation[1] = spriteHandlers[3].running.frameLocation[0] + SPRITE_CHUNKS16_SQUARE;
 	
 	spriteHandlers[3].dir = 1;
+	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
 	
 	
