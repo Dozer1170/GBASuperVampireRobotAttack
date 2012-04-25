@@ -66,7 +66,6 @@ typedef struct tagSpriteHandler
 	int alive;
 	int dir;
 	int flipped;
-	int startChunk;
 	int fuel;
 	int totalFuel;
 	int health;
@@ -370,27 +369,45 @@ void InitSprites() {
 	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
 	
 	
+	
+	
 	// Initialize health bar sprite
 	sprites[1].attribute0 = TALL | COLOR_256 | 0;
 	sprites[1].attribute1 = SIZE_64 | 0;
-	sprites[1].attribute2 = 256;
+	sprites[1].attribute2 = 288;
 
     spriteHandlers[1].idle.currFrame = 0;
-    spriteHandlers[1].idle.numFrames = 10;
-	spriteHandlers[1].idle.frameLocation[0] = 256;
-	spriteHandlers[1].idle.frameLocation[1] = spriteHandlers[1].idle.frameLocation[0] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[2] = spriteHandlers[1].idle.frameLocation[1] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[3] = spriteHandlers[1].idle.frameLocation[2] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[4] = spriteHandlers[1].idle.frameLocation[3] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[5] = spriteHandlers[1].idle.frameLocation[4] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[6] = spriteHandlers[1].idle.frameLocation[5] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[7] = spriteHandlers[1].idle.frameLocation[6] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[8] = spriteHandlers[1].idle.frameLocation[7] + SPRITE_CHUNKS64_TALL;
-	spriteHandlers[1].idle.frameLocation[9] = spriteHandlers[1].idle.frameLocation[8] + SPRITE_CHUNKS64_TALL;
+    spriteHandlers[1].idle.numFrames = 11;
 
 
 	
+	// Initialize fuel bar sprite
+	sprites[2].attribute0 = TALL | COLOR_256 | 0;
+	sprites[2].attribute1 = SIZE_64 | 210;
+	sprites[2].attribute2 = sprites[1].attribute2 + SPRITE_CHUNKS64_TALL;
+	
+	spriteHandlers[2].idle.currFrame = 0;
+	spriteHandlers[2].idle.numFrames = 11;
+	
+	
+	
+	// Initialize rocket sprite
+	sprites[3].attribute0 = SQUARE | COLOR_256 | 160;
+	sprites[3].attribute1 = SIZE_16 | 240;
+	sprites[3].attribute2 = sprites[2].attribute2 + SPRITE_CHUNKS64_TALL;
+	
+	spriteHandlers[3].running.numFrames = 2;
+	spriteHandlers[3].running.frameLocation[0] = sprites[2].attribute2 + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[3].running.frameLocation[1] = spriteHandlers[3].running.frameLocation[0] + SPRITE_CHUNKS16_SQUARE;
+	
+	spriteHandlers[3].dir = 1;
+	spriteHandlers[3].xspd = 0;
+	
+	
 	// Initialize vampire sprite
-	sprites[2].attribute2 = 896;
+	
+	
+	
+	
 }
 

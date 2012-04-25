@@ -93,6 +93,7 @@
 #define KEY_MASK     0x03FF
 
 #define bool int
+#define boolean int
 #define true 1
 #define false 0
 

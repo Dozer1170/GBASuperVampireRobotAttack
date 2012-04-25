@@ -7,8 +7,16 @@
 #include "sprite/missile.h"
 #include "sprite/vampire.h"
 #include "sprite/bars.h"
+#include "sprite/fuelbars.h"
 #include "sprite/powerups.h"
 
+
+
+int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
+boolean recentlyShot = false;
+boolean missile = false;
+
+void updateMissile();
 
 void UpdateSpriteMemory(void)
 {
@@ -30,12 +38,11 @@ void LoadContent() {
 	DMAFastCopy((void*)missilePalette,(void*)SpritePal,256,DMA_16NOW);
 
 	
-	int n, x, nextSprite = 0;
+	int nextSprite = 0;
 	
 	// Load robot sprite data into memory
-	spriteHandlers[0].startChunk = 0;
 	x = 0;
-	for(n = nextSprite; n < nextSprite + SPRITE_DATA32_SQUARE * 8; n++)
+	for(n = nextSprite; n < nextSprite + SPRITE_DATA32_SQUARE * 9; n++)
 	{
 		SpriteData[n] = robotspriteData[x];
 		x++;
@@ -45,8 +52,8 @@ void LoadContent() {
 	
 	// Load health bar sprite data into memory
 	x = 0;
-	spriteHandlers[1].startChunk = SPRITE_CHUNKS32_SQUARE * 8;
-	for (n = nextSprite; n < nextSprite + SPRITE_DATA64_TALL * 10; n++)
+	healthBarLoadSpot = nextSprite;
+	for (n = nextSprite; n < nextSprite + SPRITE_DATA64_TALL * 1; n++)
 	{
 		SpriteData[n] = barsData[x];
 		x++;
@@ -54,16 +61,39 @@ void LoadContent() {
 	nextSprite = n;
 	
 	
-	// Load vampire sprite data into memory
+	
+	// Load fuel bar sprite data into memory
 	x = 0;
-	spriteHandlers[2].startChunk = SPRITE_CHUNKS32_SQUARE * 8 + SPRITE_CHUNKS64_TALL * 10;
+	fuelBarLoadSpot = nextSprite;
+	for (n = nextSprite; n < nextSprite + SPRITE_DATA64_TALL * 1; n++)
+	{
+		SpriteData[n] = fuelbarsData[x];
+		x++;
+	}
+	nextSprite = n;
+	
+	
+	
+	// Load missile sprite data into memory
+	x = 0;
+	for (n = nextSprite; n < nextSprite + SPRITE_DATA16_SQUARE * 2; n++)
+	{
+		SpriteData[n] = missileData[x];
+		x++;
+	}
+	nextSprite = n;
+	
+	
+	
+/*	// Load vampire sprite data into memory
+	x = 0;
 	for (n = nextSprite; n < nextSprite + SPRITE_DATA32_SQUARE * 3; n++)
 	{
 		SpriteData[n] = vampireData[x];
 		x++;
 	}
 	nextSprite = n;
-	
+*/
 	
 }
 
@@ -151,10 +181,30 @@ void Update() {
         if(MAIN_HANDLER.fuel > 40)
         {
             MAIN_HANDLER.fuel -= 40;
-            sprites[1].attribute2=PrevFrameLocation(&(spriteHandlers[1].idle));
+			
+			
+			
+			
+			if (spriteHandlers[2].idle.currFrame == 0)
+			{// Already showing full bar
+			}
+			else
+			{
+				// Load the previous health bar frame
+				spriteHandlers[2].idle.currFrame--;
+				
+				x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
+				y = spriteHandlers[2].idle.currFrame * SPRITE_DATA64_TALL;
+				for (n = 0; n < SPRITE_DATA64_TALL; n++)
+				{
+					SpriteData[x] = fuelbarsData[n + y];
+					x++;
+				}	
+			}
+			
         }
             
-      if(key_hit(KEY_A))
+		if(key_hit(KEY_A))
 		{
 			MAIN_HANDLER.mode = AIR;
 			MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
@@ -176,6 +226,7 @@ void Update() {
     	} else {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
 		}
+		
 	}
 	
 	if(MAIN_HANDLER.mode == AIR)
@@ -188,7 +239,25 @@ void Update() {
             MAIN_HANDLER.totalFuel -= 2;
             if(MAIN_HANDLER.fuel <= 0 && MAIN_HANDLER.totalFuel > 0) {
                 MAIN_HANDLER.fuel += 40;
-                sprites[1].attribute2=NextFrameLocation(&(spriteHandlers[1].idle));
+				
+				
+				
+				if (spriteHandlers[1].idle.currFrame == spriteHandlers[1].idle.numFrames)
+				{// Already showing empty bar. Don't load next stuff
+				}
+				else
+				{
+					// Load the next level of the health bar
+					spriteHandlers[2].idle.currFrame++;
+					
+					x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
+					y = spriteHandlers[2].idle.currFrame * SPRITE_DATA64_TALL;
+					for (n = 0; n < SPRITE_DATA64_TALL; n++)
+					{
+						SpriteData[x] = fuelbarsData[n + y];
+						x++;
+					}				
+				}
             }
         }
         else
@@ -209,6 +278,15 @@ void Update() {
 		MAIN_SPRITE.attribute1 = SET_X(MAIN_SPRITE.attribute1, MAIN_HANDLER.x);
 	if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
 		MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
+		
+		
+		
+		
+	updateMissile();
+
+	
+	
+	
 }
 
 void DrawLevelBackground() {
@@ -267,3 +345,133 @@ int main()
  	}
 	return 0;
 }
+
+
+
+
+
+
+
+
+// Not quite functional yet
+void updateMissile()
+{
+/*	// Shoot a missile
+		if (key_hit(KEY_B) && missile == false)
+		{
+			MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
+			recentlyShot = true;
+			missile = true;
+			missileX = 0;
+			
+			// "Spawn" the missile
+			sprites[3].attribute1 &= 0xFE00;
+			sprites[3].attribute1 |= MAIN_HANDLER.x;
+			spriteHandlers[3].x = MAIN_HANDLER.x;
+			
+			sprites[3].attribute0 &= 0xFF00;
+			sprites[3].attribute1 |= MAIN_HANDLER.y;
+			spriteHandlers[3].y = MAIN_HANDLER.y;
+			
+			
+			if (MAIN_HANDLER.dir == -1)
+			{// Robot facing left
+				if (spriteHandlers[3].dir == -1)
+				{
+					// Already facing the right direction
+				}
+				else 
+				{// Rocket facing right
+					// Flip the rocket
+					sprites[3].attribute1 |= HORIZONTAL_FLIP;
+					spriteHandlers[3].dir = -1;
+				}
+			}
+			else if (MAIN_HANDLER.dir == 1)
+			{// Robot facing right
+				if (spriteHandlers[3].dir == 1)
+				{
+					// Already facing the right direction
+				}
+				else
+				{// Rocket facing left
+					// Flip the rocket
+					sprites[3].attribute1 &= ~HORIZONTAL_FLIP;
+					spriteHandlers[3].dir = 1;
+				}
+			}		
+		}
+	
+	
+	
+		// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
+		else if (missile == true)
+		{
+			sprites[3].attribute2=NextFrameLocation(&(spriteHandlers[3].running));
+			
+			if (spriteHandlers[3].dir == 1)
+			{//Going right
+				
+				if (spriteHandlers[3].x > 230)
+				{// Hit the right edge
+					// Despawn
+					sprites[3].attribute1 &= 0xFE00;
+					sprites[3].attribute1 |= 240;
+					spriteHandlers[3].x = 240;
+			
+					sprites[3].attribute0 &= 0xFF00;
+					sprites[3].attribute1 |= 160;
+					spriteHandlers[3].y = 160;
+					
+					missile = false;
+					missileX = 0;
+				}
+				else
+				{
+					spriteHandlers[3].x += spriteHandlers[3].xspd;
+					sprites[3].attribute1 += spriteHandlers[3].xspd;
+				}
+			
+			}
+			else
+			{//Going left
+			
+				if (spriteHandlers[3].x > 0)
+				{// Hit the left edge
+					// Despawn
+					sprites[3].attribute1 &= 0xFE00;
+					sprites[3].attribute1 |= 240;
+					spriteHandlers[3].x = 240;
+			
+					sprites[3].attribute0 &= 0xFF00;
+					sprites[3].attribute1 |= 160;
+					spriteHandlers[3].y = 160;
+					
+					missile = false;
+					missileX = 0;
+				}
+				else
+				{
+					sprites[3].attribute1 -= spriteHandlers[3].xspd;
+					spriteHandlers[3].x -= spriteHandlers[3].xspd;
+				}
+			}
+			
+			
+			
+			if (missileX % 4)
+			{
+				spriteHandlers[3].xspd++;
+			}
+		
+			missileX++;
+		}
+		// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~
+
+*/		
+} // End updateMissile() function
+
+
+
+
+
