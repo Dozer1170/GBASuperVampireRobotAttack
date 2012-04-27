@@ -401,8 +401,13 @@ void updateMissile()
 			despawnMissile();
 		}
 	}
-	else if (checkSpriteCollision(&MISSILE_HANDLER, &spriteHandlers[4]) && !recentlyHit)
+	else if (missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.x, MISSILE_HANDLER.y) != -1)
+	{// Check horizontal collision with map. This isn't working.
+		recentlyHit = 11;
+	}
+	else if (missile && checkSpriteCollision(&MISSILE_HANDLER, &spriteHandlers[4]))
 	{// Check to see if missile hit vampire
+	
 		recentlyHit = 11;
 		
 		spriteHandlers[4].health -= 50;
@@ -416,9 +421,10 @@ void updateMissile()
 	else if (key_hit(KEY_B) && missile == false)
 	{// Shoot a missile if B is hit
 		MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
-		recentlyShot = 6;
+		recentlyShot = 8;
 		missile = true;
 		missileX = 0;
+		MISSILE_HANDLER.xspd = 0;
 			
 		// "Spawn" the missile
 		MISSILE_SPRITE.attribute1 &= 0xFE00;
@@ -462,44 +468,36 @@ void updateMissile()
 	// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
 	else if (missile == true)
 	{					
-		if (MISSILE_HANDLER.dir == 1)
-		{//Going right
 				
-			if (MISSILE_HANDLER.x > 230)
-			{// Hit the right edge
-				despawnMissile();
-			}
-			else
-			{
-				MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
-				MISSILE_SPRITE.attribute1 += MISSILE_HANDLER.xspd;
-			}
-			
+		if (MISSILE_HANDLER.x > 230 || MISSILE_HANDLER.x < 0)
+		{// Hit an edge
+			despawnMissile();
 		}
 		else
-		{//Going left
-			
-			if (MISSILE_HANDLER.x < 0)
-			{// Hit the left edge
-				despawnMissile();	
-			}
-			else
-			{ 
-				MISSILE_SPRITE.attribute1 -= MISSILE_HANDLER.xspd;
-				MISSILE_HANDLER.x -= MISSILE_HANDLER.xspd;
-			}
+		{
+			MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
+			MISSILE_SPRITE.attribute1 += MISSILE_HANDLER.xspd;
 		}
 			
+	}
+	
 			
-			
-		if (missileX % 8 == 0)
+	
+	if (missileX % 8 == 0)
+	{
+		if (MISSILE_HANDLER.dir == 1)
 		{
 			MISSILE_HANDLER.xspd++;
-			MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
 		}
-		
-		missileX++;
+		else
+		{
+			MISSILE_HANDLER.xspd--;
+		}
+		MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
 	}
+		
+	missileX++;
+	
 	// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~
 
 		

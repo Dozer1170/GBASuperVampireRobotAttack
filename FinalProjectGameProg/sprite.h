@@ -320,10 +320,22 @@ void move(SpriteHandler *sprite, int x, int y) {
 boolean checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 {
 	if (sprite1->x == 240 || sprite2->x == 240)
-	{
+	{// One of the sprites is offscreen
 		return false;
 	}
-	if (sprite1->x < sprite2->x)
+	
+	int sprite1_ytop = sprite1->y + sprite1->hitBox.yOffset;
+	int sprite1_ybot = sprite1_ytop + sprite1->hitBox.height;
+	int sprite2_ytop = sprite2->y + sprite2->hitBox.yOffset;
+	int sprite2_ybot = sprite2_ytop + sprite2->hitBox.height;
+	
+	
+	if (sprite1_ybot < sprite2_ytop || sprite2_ybot < sprite1_ytop)
+	{
+		// Vertical miss
+		return false;
+	}
+	else if (sprite1->x < sprite2->x)
 	{// Sprite 1 on left
 		if (sprite1->x + sprite1->hitBox.xOffset + sprite1->hitBox.width > sprite2->x + sprite2->hitBox.xOffset)
 		{
@@ -340,6 +352,8 @@ boolean checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 	
 	return false;
 }
+
+
 
 void InitSprites() {
     int n;
@@ -441,6 +455,9 @@ void InitSprites() {
 	spriteHandlers[3].hitBox.negXOffset = 0;
 	spriteHandlers[3].hitBox.negYOffset = 3;
 	spriteHandlers[3].hitBox.width = 16;
+	spriteHandlers[3].hitBox.height = 9;
+	spriteHandlers[3].height = 16;
+	spriteHandlers[3].width = 16;
 	
 	spriteHandlers[3].dir = 1;
 	spriteHandlers[3].flipped = 0;
@@ -465,6 +482,8 @@ void InitSprites() {
 	spriteHandlers[4].hitBox.negXOffset = 7;
 	spriteHandlers[4].hitBox.negYOffset = 2;
 	spriteHandlers[4].hitBox.width = 14;
+	spriteHandlers[4].hitBox.height = 27;
+	
 	
 	spriteHandlers[4].alive = true;
 	spriteHandlers[4].health = 100;
