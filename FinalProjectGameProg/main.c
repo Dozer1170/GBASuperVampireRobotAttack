@@ -1,5 +1,6 @@
-#include "gba.h"
+#include <stdlib.h>
 #include <math.h>
+#include "gba.h"
 #include "maps.h"
 #include "sprite.h"
 
@@ -13,11 +14,14 @@
 
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
-int recentlyShot = 0;
+int recentlyShot = 0, recentlyHit = 0, recentlyDied = 0;
 boolean missile = false;
 
 void updateMissile();
-void missileDespawn();
+void despawnMissile();
+void updateVampire();
+
+
 
 void UpdateSpriteMemory(void)
 {
@@ -28,6 +32,13 @@ void Initialize() {
 	SetMode(0x0 | BG0_ENABLE | BG1_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
 	InitMaps();
 	InitSprites();
+	
+	
+	//Set up timers
+	REG_TM1CNT = TIMER_FREQUENCY_256;
+	REG_TM2CNT = TIMER_ENABLE | TIMER_OVERFLOW;
+	REG_TM1CNT |= TIMER_ENABLE;
+	
 }
 
 // Loads the tiles and palettes
@@ -77,7 +88,7 @@ void LoadContent() {
 	
 	// Load missile sprite data into memory
 	x = 0;
-	for (n = nextSprite; n < nextSprite + SPRITE_DATA16_SQUARE * 2; n++)
+	for (n = nextSprite; n < nextSprite + SPRITE_DATA16_SQUARE * 4; n++)
 	{
 		SpriteData[n] = missileData[x];
 		x++;
@@ -86,7 +97,7 @@ void LoadContent() {
 	
 	
 	
-/*	// Load vampire sprite data into memory
+	// Load vampire sprite data into memory
 	x = 0;
 	for (n = nextSprite; n < nextSprite + SPRITE_DATA32_SQUARE * 3; n++)
 	{
@@ -94,7 +105,7 @@ void LoadContent() {
 		x++;
 	}
 	nextSprite = n;
-*/
+
 	
 }
 
@@ -186,16 +197,16 @@ void Update() {
 			
 			
 			
-			if (spriteHandlers[2].idle.currFrame == 0)
+			if (FUELBAR_HANDLER.idle.currFrame == 0)
 			{// Already showing full bar
 			}
 			else
 			{
-				// Load the previous health bar frame
-				spriteHandlers[2].idle.currFrame--;
+				// Load the previous fuel bar frame
+				FUELBAR_HANDLER.idle.currFrame--;
 				
 				x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
-				y = spriteHandlers[2].idle.currFrame * SPRITE_DATA64_TALL;
+				y = FUELBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
 				for (n = 0; n < SPRITE_DATA64_TALL; n++)
 				{
 					SpriteData[x] = fuelbarsData[n + y];
@@ -243,16 +254,16 @@ void Update() {
 				
 				
 				
-				if (spriteHandlers[1].idle.currFrame == spriteHandlers[1].idle.numFrames)
+				if (HEALTHBAR_HANDLER.idle.currFrame == HEALTHBAR_HANDLER.idle.numFrames)
 				{// Already showing empty bar. Don't load next stuff
 				}
 				else
 				{
 					// Load the next level of the health bar
-					spriteHandlers[2].idle.currFrame++;
+					FUELBAR_HANDLER.idle.currFrame++;
 					
 					x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
-					y = spriteHandlers[2].idle.currFrame * SPRITE_DATA64_TALL;
+					y = FUELBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
 					for (n = 0; n < SPRITE_DATA64_TALL; n++)
 					{
 						SpriteData[x] = fuelbarsData[n + y];
@@ -284,7 +295,7 @@ void Update() {
 		
 		
 	updateMissile();
-
+	updateVampire();
 	
 	
 	
@@ -354,137 +365,247 @@ int main()
 
 
 
-// Not quite functional yet
+
+
+
+
+
+
+
 void updateMissile()
 {
-	// Shoot a missile
-		if (key_hit(KEY_B) && missile == false)
+	if (recentlyShot)
+	{
+		MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
+		recentlyShot--;
+	}
+	
+	
+	
+	if (recentlyHit)
+	{
+		if (recentlyHit / 6 == 0)
 		{
-			MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
-			recentlyShot = 6;
-			missile = true;
-			missileX = 0;
-			
-			// "Spawn" the missile
-			sprites[3].attribute1 &= 0xFE00;
-			sprites[3].attribute1 |= MAIN_HANDLER.x + 27;
-			spriteHandlers[3].x = MAIN_HANDLER.x + 27;
-			spriteHandlers[3].worldx = MAIN_HANDLER.worldx + 27;
-			
-			sprites[3].attribute0 &= 0xFF00;
-			sprites[3].attribute0 |= MAIN_HANDLER.y + 7;
-			spriteHandlers[3].y = MAIN_HANDLER.y + 7;
-			spriteHandlers[3].worldy = MAIN_HANDLER.worldy + 7;
-			
-			
-			if (MAIN_HANDLER.flipped == 1)
-			{// Robot facing left
-				
-				// Adjust spawn
-				sprites[3].attribute1 -= 27;
-				
-				// Flip the rocket
-				sprites[3].attribute1 |= HORIZONTAL_FLIP;
-				spriteHandlers[3].dir = -1;
-			}
-			else if (MAIN_HANDLER.flipped == 0)
-			{// Robot facing right
-				if (spriteHandlers[3].dir == 1)
-				{
-					// Already facing the right direction
-				}
-				else
-				{// Rocket facing left
-					// Flip the rocket
-					sprites[3].attribute1 &= ~HORIZONTAL_FLIP;
-					spriteHandlers[3].dir = 1;
-				}
-			}		
+			MISSILE_SPRITE.attribute2 = MISSILE_HANDLER.idle.frameLocation[1];
 		}
-	
-	
-	
-		// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
-		else if (missile == true)
+		else
 		{
-			if (recentlyShot)
-			{
-				MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
-				recentlyShot--;
-			}
+			MISSILE_SPRITE.attribute2 = MISSILE_HANDLER.idle.frameLocation[0];
+		}
 		
+		
+		recentlyHit--;
+		
+		if (recentlyHit == 0)
+		{
+			despawnMissile();
+		}
+	}
+	else if (checkSpriteCollision(&MISSILE_HANDLER, &spriteHandlers[4]) && !recentlyHit)
+	{// Check to see if missile hit vampire
+		recentlyHit = 11;
+		
+		spriteHandlers[4].health -= 50;
+		
+		if (spriteHandlers[4].health == 0)
+		{
+			recentlyDied = 30;
+			spriteHandlers[4].alive = false;
+		}
+	}
+	else if (key_hit(KEY_B) && missile == false)
+	{// Shoot a missile if B is hit
+		MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
+		recentlyShot = 6;
+		missile = true;
+		missileX = 0;
 			
-			if (spriteHandlers[3].dir == 1)
-			{//Going right
+		// "Spawn" the missile
+		MISSILE_SPRITE.attribute1 &= 0xFE00;
+		MISSILE_SPRITE.attribute1 |= MAIN_HANDLER.x + 27;
+		MISSILE_HANDLER.x = MAIN_HANDLER.x + 27;
+		MISSILE_HANDLER.worldx = MAIN_HANDLER.worldx + 27;
+			
+		MISSILE_SPRITE.attribute0 &= 0xFF00;
+		MISSILE_SPRITE.attribute0 |= MAIN_HANDLER.y + 7;
+		MISSILE_HANDLER.y = MAIN_HANDLER.y + 7;
+		MISSILE_HANDLER.worldy = MAIN_HANDLER.worldy + 7;
+			
+			
+		if (MAIN_HANDLER.flipped == 1)
+		{// Robot facing left
 				
-				if (spriteHandlers[3].x > 230)
-				{// Hit the right edge
-					// Despawn
-					sprites[3].attribute1 &= 0xFE00;
-					sprites[3].attribute1 |= 240;
-					spriteHandlers[3].x = 240;
-			
-					sprites[3].attribute0 &= 0xFF00;
-					sprites[3].attribute1 |= 160;
-					spriteHandlers[3].y = 160;
-					
-					spriteHandlers[3].xspd = 0;
+			// Adjust spawn
+			MISSILE_SPRITE.attribute1 -= 27;
 				
-					missile = false;
-					missileX = 0;
-				}
-				else
-				{
-					spriteHandlers[3].x += spriteHandlers[3].xspd;
-					sprites[3].attribute1 += spriteHandlers[3].xspd;
-				}
-			
+			// Flip the rocket
+			MISSILE_SPRITE.attribute1 |= HORIZONTAL_FLIP;
+			MISSILE_HANDLER.dir = -1;
+		}
+		else if (MAIN_HANDLER.flipped == 0)
+		{// Robot facing right
+			if (MISSILE_HANDLER.dir == 1)
+			{
+				// Already facing the right direction
 			}
 			else
-			{//Going left
-			
-				if (spriteHandlers[3].x < 0)
-				{// Hit the left edge
-					// Despawn
-					sprites[3].attribute1 &= 0xFE00;
-					sprites[3].attribute1 |= 240;
-					spriteHandlers[3].x = 240;
-			
-					sprites[3].attribute0 &= 0xFF00;
-					sprites[3].attribute1 |= 160;
-					spriteHandlers[3].y = 160;
-					
-					spriteHandlers[3].xspd = 0;
-					
-					missile = false;
-					missileX = 0;
-				}
-				else
-				{ 
-					sprites[3].attribute1 -= spriteHandlers[3].xspd;
-					spriteHandlers[3].x -= spriteHandlers[3].xspd;
-				}
+			{// Rocket facing left
+				// Flip the rocket
+				MISSILE_SPRITE.attribute1 &= ~HORIZONTAL_FLIP;
+				MISSILE_HANDLER.dir = 1;
 			}
-			
-			
-			
-			if (missileX % 8 == 0)
+		}		
+	}
+	
+	
+	
+	// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
+	else if (missile == true)
+	{					
+		if (MISSILE_HANDLER.dir == 1)
+		{//Going right
+				
+			if (MISSILE_HANDLER.x > 230)
+			{// Hit the right edge
+				despawnMissile();
+			}
+			else
 			{
-				spriteHandlers[3].xspd++;
-				sprites[3].attribute2=NextFrameLocation(&(spriteHandlers[3].running));
+				MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
+				MISSILE_SPRITE.attribute1 += MISSILE_HANDLER.xspd;
 			}
-		
-			missileX++;
+			
 		}
-		// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~
+		else
+		{//Going left
+			
+			if (MISSILE_HANDLER.x < 0)
+			{// Hit the left edge
+				despawnMissile();	
+			}
+			else
+			{ 
+				MISSILE_SPRITE.attribute1 -= MISSILE_HANDLER.xspd;
+				MISSILE_HANDLER.x -= MISSILE_HANDLER.xspd;
+			}
+		}
+			
+			
+			
+		if (missileX % 8 == 0)
+		{
+			MISSILE_HANDLER.xspd++;
+			MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
+		}
+		
+		missileX++;
+	}
+	// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~
 
 		
 } // End updateMissile() function
 
 
-void missileDespawn()
+void despawnMissile()
 {
-	
+	MISSILE_SPRITE.attribute1 &= 0xFE00;
+	MISSILE_SPRITE.attribute1 |= 240;
+	MISSILE_HANDLER.x = 240;
+			
+	MISSILE_SPRITE.attribute0 &= 0xFF00;
+	MISSILE_SPRITE.attribute1 |= 160;
+	MISSILE_HANDLER.y = 160;
+					
+	MISSILE_HANDLER.xspd = 0;
+					
+	missile = false;
+	missileX = 0;
 }
+
+
+
+
+void updateVampire()
+{
+	if (spriteHandlers[4].alive == true)
+	{
+		if (REG_TM2D % 6)
+		{
+			if (rand() % 10 == 0)
+			{//Change direction
+				
+				if (spriteHandlers[4].dir == 1)
+				{//Flip left
+					sprites[4].attribute1 |= HORIZONTAL_FLIP;
+					spriteHandlers[4].dir = -1;
+					spriteHandlers[4].flipped = true;
+				}
+				else
+				{//Flip Right
+					sprites[4].attribute1 &= ~HORIZONTAL_FLIP;
+					spriteHandlers[4].dir = 1;
+					spriteHandlers[4].flipped = false;
+				}
+			}
+			else
+			{//Keep moving
+				if (spriteHandlers[4].dir == 1)
+				{//Go right
+					sprites[4].attribute2 = NextFrameLocation(&(spriteHandlers[4].running));
+					sprites[4].attribute1 += 1;
+					spriteHandlers[4].x += 1;
+				}
+				else
+				{//Go left
+					sprites[4].attribute2 = NextFrameLocation(&(spriteHandlers[4].running));
+					sprites[4].attribute1 -= 1;
+					spriteHandlers[4].x -= 1;
+				}
+			}
+		}
+		else
+		{//Idle
+			sprites[4].attribute2 = spriteHandlers[4].idle.frameLocation[0];
+		}
+	}
+	else
+	{// Dead
+		if (recentlyDied)
+		{// Flickery death
+			
+			if (recentlyDied % 5 == 0)
+			{
+				sprites[4].attribute0 &= 0xFF00;
+				sprites[4].attribute0 |= 160;
+	
+				sprites[4].attribute1 &= 0xFE00;
+				sprites[4].attribute1 |= 240;
+			}
+			else
+			{
+				sprites[4].attribute0 &= 0xFF00;
+				sprites[4].attribute0 |= spriteHandlers[4].y;
+	
+				sprites[4].attribute1 &= 0xFE00;
+				sprites[4].attribute1 |= spriteHandlers[4].x;
+			}
+			
+			
+			recentlyDied--;
+			
+			if (recentlyDied == 0)
+			{
+				sprites[4].attribute0 &= 0xFF00;
+				sprites[4].attribute0 |= 160;
+				spriteHandlers[4].y = 160;
+	
+				sprites[4].attribute1 &= 0xFE00;
+				sprites[4].attribute1 |= 240;
+				spriteHandlers[4].x = 240;
+			}
+		}
+	}
+}
+
 
 

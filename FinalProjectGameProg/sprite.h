@@ -6,6 +6,19 @@ void moveViewport();
 #define MAIN_HANDLER spriteHandlers[0]
 #define MAIN_SPRITE sprites[0]
 
+#define HEALTHBAR_HANDLER spriteHandlers[1]
+#define HEALTHBAR_SPRITE sprites[1]
+
+#define FUELBAR_HANDLER spriteHandlers[2]
+#define FUELBAR_SPRITE sprites[2]
+
+#define MISSILE_HANDLER spriteHandlers[3]
+#define MISSILE_SPRITE sprites[3]
+
+#define VAMPIRE_HANDLER spriteHandlers[4]
+#define VAMPIRE_SPRITE sprites[4]
+
+
 #define GROUND 0
 #define AIR 1
 
@@ -61,7 +74,7 @@ typedef struct tagSpriteHandler
 	int worldx, worldy;
 	float acc, dec, xspd, yspd;
 	float gspd, maxGspd;
-   float jumpStr;
+    float jumpStr;
 	int width, height;
 	int alive;
 	int dir;
@@ -304,8 +317,27 @@ void move(SpriteHandler *sprite, int x, int y) {
 
 
 
-bool spriteCollision(sprite1, sprite1VelX, sprite1VelY, sprite2, sprite2VelX, sprite2VelY)
+boolean checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 {
+	if (sprite1->x == 240 || sprite2->x == 240)
+	{
+		return false;
+	}
+	if (sprite1->x < sprite2->x)
+	{// Sprite 1 on left
+		if (sprite1->x + sprite1->hitBox.xOffset + sprite1->hitBox.width > sprite2->x + sprite2->hitBox.xOffset)
+		{
+			return true;
+		}
+	}
+	else
+	{// Sprite 2 on left
+		if (sprite2->x + sprite2->hitBox.xOffset + sprite2->hitBox.width > sprite1->x + sprite1->hitBox.xOffset)
+		{
+			return true;
+		}
+	}
+	
 	return false;
 }
 
@@ -397,18 +429,49 @@ void InitSprites() {
 	sprites[3].attribute2 = sprites[2].attribute2 + SPRITE_CHUNKS64_TALL;
 	
 	spriteHandlers[3].running.numFrames = 2;
-	spriteHandlers[3].running.frameLocation[0] = sprites[2].attribute2 + SPRITE_CHUNKS64_TALL;
+	spriteHandlers[3].running.frameLocation[0] = sprites[3].attribute2;
 	spriteHandlers[3].running.frameLocation[1] = spriteHandlers[3].running.frameLocation[0] + SPRITE_CHUNKS16_SQUARE;
+	
+	spriteHandlers[3].idle.numFrames = 2;
+	spriteHandlers[3].idle.frameLocation[0] = spriteHandlers[3].running.frameLocation[1] + SPRITE_CHUNKS16_SQUARE;
+	spriteHandlers[3].idle.frameLocation[1] = spriteHandlers[3].idle.frameLocation[0] + SPRITE_CHUNKS16_SQUARE;
+	
+	spriteHandlers[3].hitBox.xOffset = 0;
+	spriteHandlers[3].hitBox.yOffset = 3;
+	spriteHandlers[3].hitBox.negXOffset = 0;
+	spriteHandlers[3].hitBox.negYOffset = 3;
+	spriteHandlers[3].hitBox.width = 16;
 	
 	spriteHandlers[3].dir = 1;
 	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
-	
+
+
 	
 	// Initialize vampire sprite
+	sprites[4].attribute0 = SQUARE | COLOR_256 | 66;
+	sprites[4].attribute1 = SIZE_32 | 160;
+	sprites[4].attribute2 = sprites[3].attribute2 + SPRITE_CHUNKS16_SQUARE * 4;
+
+	spriteHandlers[4].idle.frameLocation[0] = sprites[4].attribute2;
+	spriteHandlers[4].idle.numFrames = 1;
 	
+	spriteHandlers[4].running.numFrames = 2;
+	spriteHandlers[4].running.frameLocation[0] = spriteHandlers[4].idle.frameLocation[0] + SPRITE_CHUNKS32_SQUARE;
+	spriteHandlers[4].running.frameLocation[1] = spriteHandlers[4].running.frameLocation[0] + SPRITE_CHUNKS32_SQUARE;
 	
+	spriteHandlers[4].hitBox.xOffset = 7; 
+	spriteHandlers[4].hitBox.yOffset = 2;
+	spriteHandlers[4].hitBox.negXOffset = 7;
+	spriteHandlers[4].hitBox.negYOffset = 2;
+	spriteHandlers[4].hitBox.width = 14;
 	
+	spriteHandlers[4].alive = true;
+	spriteHandlers[4].health = 100;
+	
+	spriteHandlers[4].dir = 1;
+	spriteHandlers[4].x = 160;
+	spriteHandlers[4].y = 66;
 	
 }
 
