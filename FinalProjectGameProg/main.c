@@ -178,9 +178,69 @@ void moveXDir()
     }
     MAIN_HANDLER.xspd = (MAIN_HANDLER.gspd * MAIN_HANDLER.angle.cosAngle) *
 			MAIN_HANDLER.dir;
+			
+    if(MAIN_HANDLER.totalFuel < 440)
+    {
+        MAIN_HANDLER.fuel += 1;
+        MAIN_HANDLER.totalFuel += 1;
+    }
+}
+
+void fuelUpdate()
+{
+    //FUEL BAR INCREASES
+    if(MAIN_HANDLER.fuel > 40)
+    {
+        MAIN_HANDLER.fuel -= 40;
+
+        if (FUELBAR_HANDLER.idle.currFrame == 0)
+        {// Already showing full bar
+        }
+        else
+        {
+            // Load the previous health bar frame
+			FUELBAR_HANDLER.idle.currFrame--;
+				
+			x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
+			y = FUELBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
+			for (n = 0; n < SPRITE_DATA64_TALL; n++)
+			{
+				SpriteData[x] = fuelbarsData[n + y];
+				x++;
+            }	
+        }
+    }
+    
+    //FUEL BAR DECREASES
+    if(MAIN_HANDLER.fuel <= 0 && MAIN_HANDLER.totalFuel > 0)
+    {
+        MAIN_HANDLER.fuel += 40;
+		if (FUELBAR_HANDLER.idle.currFrame == FUELBAR_HANDLER.idle.numFrames)
+		{// Already showing empty bar. Don't load next stuff
+		}
+		else
+		{
+			// Load the next level of the health bar
+			FUELBAR_HANDLER.idle.currFrame++;
+					
+			x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
+			y = FUELBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
+			for (n = 0; n < SPRITE_DATA64_TALL; n++)
+			{
+				SpriteData[x] = fuelbarsData[n + y];
+				x++;
+			}
+            if(FUELBAR_HANDLER.idle.currFrame == 11)
+            {
+                MAIN_HANDLER.fuel = 0;
+                MAIN_HANDLER.totalFuel = 0;
+            }				
+        }
+    }
 }
 
 void Update() {
+    fuelUpdate();
     ButtonPoll();
     moveXDir();
     if(MAIN_HANDLER.mode == GROUND)
@@ -189,31 +249,6 @@ void Update() {
         {
             MAIN_HANDLER.fuel += 1;
             MAIN_HANDLER.totalFuel += 1;
-        }
-        if(MAIN_HANDLER.fuel > 40)
-        {
-            MAIN_HANDLER.fuel -= 40;
-			
-			
-			
-			
-			if (FUELBAR_HANDLER.idle.currFrame == 0)
-			{// Already showing full bar
-			}
-			else
-			{
-				// Load the previous fuel bar frame
-				FUELBAR_HANDLER.idle.currFrame--;
-				
-				x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
-				y = FUELBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
-				for (n = 0; n < SPRITE_DATA64_TALL; n++)
-				{
-					SpriteData[x] = fuelbarsData[n + y];
-					x++;
-				}	
-			}
-			
         }
             
 		if(key_hit(KEY_A))
@@ -237,40 +272,18 @@ void Update() {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.standing));
     	} else {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-		}
-		
+		}	
 	}
 	
 	if(MAIN_HANDLER.mode == AIR)
 	{
 	    if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
 	    {
+	        MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
 	        if(MAIN_HANDLER.yspd > -2)
 	            MAIN_HANDLER.yspd -= 0.25;
-            MAIN_HANDLER.fuel -= 2;
-            MAIN_HANDLER.totalFuel -= 2;
-            if(MAIN_HANDLER.fuel <= 0 && MAIN_HANDLER.totalFuel > 0) {
-                MAIN_HANDLER.fuel += 40;
-				
-				
-				
-				if (HEALTHBAR_HANDLER.idle.currFrame == HEALTHBAR_HANDLER.idle.numFrames)
-				{// Already showing empty bar. Don't load next stuff
-				}
-				else
-				{
-					// Load the next level of the health bar
-					FUELBAR_HANDLER.idle.currFrame++;
-					
-					x = SPRITE_DATA32_SQUARE * 9 + SPRITE_DATA64_TALL * 1;
-					y = FUELBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
-					for (n = 0; n < SPRITE_DATA64_TALL; n++)
-					{
-						SpriteData[x] = fuelbarsData[n + y];
-						x++;
-					}				
-				}
-            }
+            MAIN_HANDLER.fuel -= 4;
+            MAIN_HANDLER.totalFuel -= 4;
         }
         else
         {
@@ -284,6 +297,9 @@ void Update() {
 	    	}
 		}
 	}
+	
+
+	
 	move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
 		MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
 	if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)
@@ -291,14 +307,8 @@ void Update() {
 	if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
 		MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
 		
-		
-		
-		
 	updateMissile();
 	updateVampire();
-	
-	
-	
 }
 
 void DrawLevelBackground() {
@@ -358,20 +368,6 @@ int main()
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void updateMissile()
 {
 	if (recentlyShot)
@@ -380,8 +376,6 @@ void updateMissile()
 		recentlyShot--;
 	}
 	
-	
-	
 	if (recentlyHit)
 	{
 		if (recentlyHit / 6 == 0)
@@ -389,6 +383,8 @@ void updateMissile()
 			MISSILE_SPRITE.attribute2 = MISSILE_HANDLER.idle.frameLocation[1];
 		}
 		else
+	// Shoot a missile
+		if (key_hit(KEY_B) && missile == false)
 		{
 			MISSILE_SPRITE.attribute2 = MISSILE_HANDLER.idle.frameLocation[0];
 		}
@@ -431,13 +427,12 @@ void updateMissile()
 		MISSILE_SPRITE.attribute1 |= MAIN_HANDLER.x + 27;
 		MISSILE_HANDLER.x = MAIN_HANDLER.x + 27;
 		MISSILE_HANDLER.worldx = MAIN_HANDLER.worldx + 27;
-			
+
 		MISSILE_SPRITE.attribute0 &= 0xFF00;
 		MISSILE_SPRITE.attribute0 |= MAIN_HANDLER.y + 7;
 		MISSILE_HANDLER.y = MAIN_HANDLER.y + 7;
 		MISSILE_HANDLER.worldy = MAIN_HANDLER.worldy + 7;
-			
-			
+		
 		if (MAIN_HANDLER.flipped == 1)
 		{// Robot facing left
 				
@@ -494,13 +489,9 @@ void updateMissile()
 			MISSILE_HANDLER.xspd--;
 		}
 		MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
-	}
-		
+	}	
 	missileX++;
-	
-	// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~
-
-		
+	// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~	
 } // End updateMissile() function
 
 
@@ -519,9 +510,6 @@ void despawnMissile()
 	missile = false;
 	missileX = 0;
 }
-
-
-
 
 void updateVampire()
 {

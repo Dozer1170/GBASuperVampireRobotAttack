@@ -408,7 +408,7 @@ void InitSprites() {
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_HANDLER.fuel = 40;
-	MAIN_HANDLER.totalFuel = 400;
+	MAIN_HANDLER.totalFuel = 440;
 	MAIN_HANDLER.health = 10;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
 	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
@@ -463,8 +463,6 @@ void InitSprites() {
 	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
 
-
-	
 	// Initialize vampire sprite
 	sprites[4].attribute0 = SQUARE | COLOR_256 | 66;
 	sprites[4].attribute1 = SIZE_32 | 160;
@@ -490,7 +488,6 @@ void InitSprites() {
 	
 	spriteHandlers[4].dir = 1;
 	spriteHandlers[4].x = 160;
-	spriteHandlers[4].y = 66;
-	
+	spriteHandlers[4].y = 66;	
 }
 
