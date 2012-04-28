@@ -8,4 +8,9 @@ FinalProjectGameProg/*.*.o
 FinalProjectGameProg/*.*.s
 FinalProjectGameProg/*.vhw
 FinalProjectGameProg/*.vhw.bak
+FinalProjectGameProg/*.elf
+FinalProjectGameProg/*.zip
+FinalProjectGameProg/*.gba
+FinalProjectGameProg/*.stackdump
+*.zip
 .gitignore~

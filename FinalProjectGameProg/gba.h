@@ -53,29 +53,6 @@
 
 #define RGB(r,g,b) (unsigned short)((r)+((g)<<5)+((b)<<10))
 
-#define FREE_MODE 0
-#define LINE_MODE 1
-#define BOX_MODE 2
-#define CIRCLE_MODE 3
-
-#define WHITE 0
-#define RED 1
-#define YELLOW 2
-#define GREEN 3
-#define AQUA 4
-#define BLUE 5
-#define PURPLE 6
-
-#define BLACK_RGB RGB(0,0,0)
-#define GREY_RGB RGB(15,15,15)
-#define WHITE_RGB RGB(31,31,31)
-#define RED_RGB RGB(31,0,0)
-#define YELLOW_RGB RGB(31,31,0)
-#define GREEN_RGB RGB(0,31,0)
-#define AQUA_RGB RGB(0,31,31)
-#define BLUE_RGB RGB(0,0,31)
-#define PURPLE_RGB RGB(31,0,31)
-
 #define HEIGHT 160
 #define WIDTH 240
 
@@ -174,7 +151,6 @@
 #define SPRITE_DATA64_WIDE      1024
 #define SPRITE_CHUNKS64_WIDE      64
 
-
 // Timer stuff
 #define REG_TM0CNT     *(volatile u16*)0x4000102
 #define REG_TM1CNT     *(volatile u16*)0x4000106
@@ -193,6 +169,13 @@
 #define TIMER_OVERFLOW 0x4
 #define TIMER_ENABLE 0x80
 
+#define BLUE 0x7800
+#define PURPLE 0x5830
+#define LGREEN 0x23E5
+#define YELLOW 0x06F6
+#define DGREEN 0x21A5
+#define RED 0x14BF
+#define PINK 0x7C3E
 
 typedef unsigned char u8;
 typedef unsigned short u16;

@@ -4,15 +4,33 @@
 #include "BackgroundSource/factorylevel.pal.c"
 #include "BackgroundSource/factorylevel.raw.c"
 #include "BackgroundSource/factorybg.map.c"
+#include "BackgroundSource/factorybg.raw.c"
+#include "BackgroundSource/outdoorhitmap.map.c"
+#include "BackgroundSource/outdoorhitmap.raw.c"
+#include "BackgroundSource/outdoorlevel.map.c"
+#include "BackgroundSource/outdoorlevel.pal.c"
+#include "BackgroundSource/outdoorlevel.raw.c"
+#include "BackgroundSource/outdoorlandscape.map.c"
+#include "BackgroundSource/outdoorlandscape.raw.c"
 //Defines
 #define FACTORY_TILE_SET_SIZE 9280
 
 const u16 *level_Palette;
 const u8 *level_Tiles;
+const u8 *hitmap_Tiles;
+const u8 *bg_Tiles;
 
 u16* levelMap =(u16*)ScreenBaseBlock(30);
-u16* levelHitMap = (u16*)ScreenBaseBlock(20);
 u16* levelBgMap = (u16*)ScreenBaseBlock(15);
+
+int currLevel = 0;
+
+typedef struct GoalBox {
+   int lx;
+   int ly;
+   int rx;
+   int ry;
+} GoalBox;
 
 // Typedefs
 typedef struct BgInfo {
@@ -28,9 +46,13 @@ typedef struct BgInfo {
 	int levelHeight; //Num of 8x8 tiles in one column of map
 	int pixelXMax; //Max distance the camera can move in x direction
 	int pixelYMax; //Max distance the camera can move in y direction
+	int botOffset;
+	int rightOffset;
 	int mapSize; //Num entries in array in a *.map.c
+	int tileSize; //Num entries in tile .raw
    const u16* srcMap; //Where values will be copied from
    u16* destMap; //Where values will be copied to
+   GoalBox goal; //Where the goal of the level is
 } BgInfo;
 
 BgInfo bg, level, hitmap;
@@ -55,57 +77,117 @@ void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
 {
 	int i;
 	for(i = 0; i < 32; i++)
-	{
-		toMap[((i+screenXOff)%32) + screenYRow * 32] =
-			fromMap[(bgXOff + i) + (mapWidth*bgRow)];
+	{ int *p = 0x3000000;
+      *p  = (bgXOff + i) + (mapWidth*bgRow);
+      toMap[((i+screenXOff)%32) + screenYRow * 32] = fromMap[*p];
 	}
 }
 
 void InitMaps() {
    REG_BG0CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (30 << SCREEN_SHIFT);
-   REG_BG1CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (15 << SCREEN_SHIFT);
-	REG_BG2CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (20 << SCREEN_SHIFT);
+   REG_BG1CNT = BG_COLOR256 | TEXTBG_SIZE_256x256 | (15 << SCREEN_SHIFT)  | (2 << CHAR_SHIFT);
 
-	level_Palette = factorylevel_Palette;
-	level_Tiles = factorylevel_Tiles;
+   if(currLevel == 0) {
+   	level_Palette = factorylevel_Palette;
+   	level_Tiles = factorylevel_Tiles;
+      hitmap_Tiles = factoryhitmap_Tiles;
+      bg_Tiles = factorybg_Tiles;
 
- 	level.x = 16, level.y = 16;
-	level.dx = 0, level.dy = 0;
-	level.backgroundNextCol = 33, level.backgroundPrevCol = 0;
-	level.backgroundNextRow = 33, level.backgroundPrevRow = 0;
-	level.xNextCol = 1;
-	level.xPrevCol = 0;
-	level.yNextRow = 1;
-	level.yPrevRow = 0;
-	level.levelWidth = 300;
-	level.levelHeight = 100;
-	level.pixelXMax = 2400;
-	level.pixelYMax = 800;
-	level.mapSize = 30000;
-	level.srcMap = factorylevel_Map;
-	level.destMap = levelMap;
+    	level.x = 16, level.y = 16;
+   	level.dx = 0, level.dy = 0;
+   	level.backgroundNextCol = 33, level.backgroundPrevCol = 0;
+   	level.backgroundNextRow = 33, level.backgroundPrevRow = 0;
+   	level.xNextCol = 1;
+   	level.xPrevCol = 0;
+   	level.yNextRow = 1;
+   	level.yPrevRow = 0;
+   	level.levelWidth = 300;
+   	level.levelHeight = 100;
+   	level.pixelXMax = 2400;
+   	level.pixelYMax = 800;
+   	level.botOffset = 96;
+   	level.rightOffset = 136;
+   	level.mapSize = 30000;
+   	level.tileSize = 4160;
+   	level.srcMap = factorylevel_Map;
+   	level.destMap = levelMap;
+   	level.goal.lx = 2320;
+      level.goal.ly = 736;
+      level.goal.rx = 2367;
+      level.goal.ry = 767;
 
-	hitmap.levelWidth = 300;
-	hitmap.levelHeight = 100;
-	hitmap.pixelXMax = 2400;
-	hitmap.pixelYMax = 800;
-	hitmap.mapSize = 30000;
-	hitmap.srcMap = factoryhitmap_Map;
-	hitmap.destMap = levelHitMap;
-	
-	bg.x = 16, bg.y = 16;
-	bg.dx = 0, bg.dy = 0;
-	bg.backgroundNextCol = 33, bg.backgroundPrevCol = 0;
-	bg.backgroundNextRow = 33, bg.backgroundPrevRow = 0;
-	bg.xNextCol = 1;
-	bg.xPrevCol = 0;
-	bg.yNextRow = 1;
-	bg.yPrevRow = 0;
-	bg.levelWidth = 150;
-	bg.levelHeight = 50;
-   bg.srcMap = factorybg_Map;
-   bg.destMap = levelBgMap;
-	//PixelXMax and PixelYMax not important for far background
+   	hitmap.levelWidth = 300;
+   	hitmap.levelHeight = 100;
+   	hitmap.pixelXMax = 2400;
+   	hitmap.pixelYMax = 800;
+   	hitmap.mapSize = 30000;
+   	hitmap.srcMap = factoryhitmap_Map;
+
+   	bg.x = 16, bg.y = 16;
+   	bg.dx = 0, bg.dy = 0;
+   	bg.backgroundNextCol = 33, bg.backgroundPrevCol = 0;
+   	bg.backgroundNextRow = 33, bg.backgroundPrevRow = 0;
+   	bg.xNextCol = 1;
+   	bg.xPrevCol = 0;
+   	bg.yNextRow = 1;
+   	bg.yPrevRow = 0;
+   	bg.levelWidth = 150;
+   	bg.levelHeight = 50;
+   	bg.tileSize = 2112;
+      bg.srcMap = factorybg_Map;
+      bg.destMap = levelBgMap;
+   	//PixelXMax and PixelYMax not important for far background
+   } else if( currLevel == 1) {
+      level_Palette = outdoorlevel_Palette;
+   	level_Tiles = outdoorlevel_Tiles;
+   	hitmap_Tiles = outdoorhitmap_Tiles;
+   	bg_Tiles = outdoorlandscape_Tiles;
+
+    	level.x = 16, level.y = 16;
+   	level.dx = 0, level.dy = 0;
+   	level.backgroundNextCol = 33, level.backgroundPrevCol = 0;
+   	level.backgroundNextRow = 33, level.backgroundPrevRow = 0;
+   	level.xNextCol = 1;
+   	level.xPrevCol = 0;
+   	level.yNextRow = 1;
+   	level.yPrevRow = 0;
+   	level.levelWidth = 300;
+   	level.levelHeight = 100;
+   	level.pixelXMax = 2400;
+   	level.pixelYMax = 800;
+   	level.botOffset = 96;
+   	level.rightOffset = 136;
+   	level.mapSize = 30000;
+   	level.tileSize = 3776;
+   	level.srcMap = outdoorlevel_Map;
+   	level.destMap = levelMap;
+   	level.goal.lx = 730;
+   	level.goal.ly = 160;
+   	level.goal.rx = 780;
+   	level.goal.ry = 200;
+
+   	hitmap.levelWidth = 600;
+   	hitmap.levelHeight = 200;
+   	hitmap.pixelXMax = 4800;
+   	hitmap.pixelYMax = 1600;
+   	hitmap.mapSize = 120000;
+   	hitmap.srcMap = outdoorhitmap_Map;
+
+   	bg.x = 16, bg.y = 16;
+   	bg.dx = 0, bg.dy = 0;
+   	bg.backgroundNextCol = 33, bg.backgroundPrevCol = 0;
+   	bg.backgroundNextRow = 33, bg.backgroundPrevRow = 0;
+   	bg.xNextCol = 1;
+   	bg.xPrevCol = 0;
+   	bg.yNextRow = 1;
+   	bg.yPrevRow = 0;
+   	bg.levelWidth = 300;
+   	bg.levelHeight = 100;
+   	bg.tileSize = 3880;
+      bg.srcMap = outdoorlandscape_Map;
+      bg.destMap = levelBgMap;
+   	//PixelXMax and PixelYMax not important for far background
+   }
 
 	REG_BG0VOFS = level.y;
 	REG_BG0HOFS = level.x;

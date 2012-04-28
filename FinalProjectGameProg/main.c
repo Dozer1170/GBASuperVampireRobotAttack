@@ -15,7 +15,9 @@
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
 int recentlyShot = 0, recentlyHit = 0, recentlyDied = 0;
-boolean missile = false;
+int maxLevel = 1;
+bool missile = false;
+bool needReset = false;
 
 void updateMissile();
 void despawnMissile();
@@ -46,7 +48,9 @@ void LoadContent() {
 	DMAFastCopy((void*)level_Palette,(void*)BGPaletteMem,
 		256,DMA_16NOW);
 	DMAFastCopy((void*)level_Tiles,(void*)CharBaseBlock(0),
-		level.mapSize/4,DMA_32NOW);
+		level.tileSize/4,DMA_32NOW);
+   DMAFastCopy((void*)bg_Tiles,(void*)CharBaseBlock(2),
+		bg.tileSize/4,DMA_32NOW);
 	DMAFastCopy((void*)missilePalette,(void*)SpritePal,256,DMA_16NOW);
 
 	
@@ -109,9 +113,43 @@ void LoadContent() {
 	
 }
 
+void reset() {
+   needReset = false;
+   currLevel = 0;
+   Initialize();
+   LoadContent();
+   WaitVBlank();
+}
+
+void resetAfterLoop() {
+   needReset = true;
+}
+
+bool withinGoal() {
+   if(MAIN_HANDLER.worldx + MAIN_HANDLER.width/2 > level.goal.lx &&
+      MAIN_HANDLER.worldy + MAIN_HANDLER.height/2 > level.goal.ly &&
+      MAIN_HANDLER.worldx + MAIN_HANDLER.width/2 < level.goal.rx &&
+      MAIN_HANDLER.worldy + MAIN_HANDLER.height/2 < level.goal.ry) {
+      return true;
+   } else {
+      return false;
+   }
+}
+
+void nextLevel() {
+   if(currLevel >= maxLevel) {
+      //win effect
+   } else {
+      currLevel++;
+      Initialize();
+      LoadContent();
+      WaitVBlank();
+   }
+}
+
 void moveViewport() {
 	int nx = MAIN_HANDLER.worldx - 120 + MAIN_HANDLER.width/2;
-  	if(MAIN_HANDLER.worldx < level.pixelXMax - 136
+  	if(MAIN_HANDLER.worldx < level.pixelXMax - level.rightOffset
       && MAIN_HANDLER.worldx > 119 + MAIN_HANDLER.width/2)
 	{
      	level.dx += nx - level.x;
@@ -120,7 +158,7 @@ void moveViewport() {
 	   bg.x += (nx/3 - bg.x);
 	}
 	int ny = MAIN_HANDLER.worldy - 80 + MAIN_HANDLER.height/2;
-	if(MAIN_HANDLER.worldy < level.pixelYMax - 96
+	if(MAIN_HANDLER.worldy < level.pixelYMax - level.botOffset
       && MAIN_HANDLER.worldy > 79 + MAIN_HANDLER.height/2)
 	{
      	level.dy += ny - level.y;
@@ -240,75 +278,81 @@ void fuelUpdate()
 }
 
 void Update() {
-    fuelUpdate();
-    ButtonPoll();
-    moveXDir();
-    if(MAIN_HANDLER.mode == GROUND)
-    {
-        if(MAIN_HANDLER.totalFuel < 400)
-        {
-            MAIN_HANDLER.fuel += 1;
-            MAIN_HANDLER.totalFuel += 1;
-        }
-            
-		if(key_hit(KEY_A))
-		{
-			MAIN_HANDLER.mode = AIR;
-			MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
-		}
-		MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
-			((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
-			* MAIN_HANDLER.angle.sinAngle) - .05;
-			
-		if(MAIN_HANDLER.gspd < 0)
-		    MAIN_HANDLER.gspd = 0;
-			
+   if(needReset)
+      reset();
+   if(withinGoal())
+      nextLevel();
+
+   fuelUpdate();
+   ButtonPoll();
+   moveXDir();
+   if(MAIN_HANDLER.mode == GROUND)
+   {
+      if(MAIN_HANDLER.totalFuel < 400)
+      {
+          MAIN_HANDLER.fuel += 1;
+          MAIN_HANDLER.totalFuel += 1;
+      }
+
+   	if(key_hit(KEY_A))
+   	{
+   		MAIN_HANDLER.mode = AIR;
+   		MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
+   	}
+   	MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
+   		((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
+   		* MAIN_HANDLER.angle.sinAngle) - .05;
+
+   	if(MAIN_HANDLER.gspd < 0)
+   	    MAIN_HANDLER.gspd = 0;
+
         MAIN_HANDLER.xspd = (MAIN_HANDLER.gspd * MAIN_HANDLER.angle.cosAngle) *
-			MAIN_HANDLER.dir;
-		if(MAIN_HANDLER.mode != AIR)
-			MAIN_HANDLER.yspd = (MAIN_HANDLER.gspd*MAIN_HANDLER.angle.sinAngle);
+   		MAIN_HANDLER.dir;
+   	if(MAIN_HANDLER.mode != AIR)
+   		MAIN_HANDLER.yspd = (MAIN_HANDLER.gspd*MAIN_HANDLER.angle.sinAngle);
 
         if(MAIN_HANDLER.xspd == 0) {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.standing));
     	} else {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-		}	
-	}
-	
-	if(MAIN_HANDLER.mode == AIR)
-	{
-	    if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
-	    {
-	        MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-	        if(MAIN_HANDLER.yspd > -2)
-	            MAIN_HANDLER.yspd -= 0.25;
+   	}
+   }
+
+   if(MAIN_HANDLER.mode == AIR)
+   {
+       if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
+       {
+           MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
+           if(MAIN_HANDLER.yspd > -2)
+               MAIN_HANDLER.yspd -= 0.25;
             MAIN_HANDLER.fuel -= 4;
             MAIN_HANDLER.totalFuel -= 4;
         }
         else
         {
             if(MAIN_HANDLER.yspd < 10)
-	    		MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
-    			
-	    	if(MAIN_HANDLER.yspd < 0) {
-                MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
-	    	} else {
-                MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpDown));
-	    	}
-		}
-	}
-	
+       		MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
 
-	
-	move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
-		MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
-	if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)
-		MAIN_SPRITE.attribute1 = SET_X(MAIN_SPRITE.attribute1, MAIN_HANDLER.x);
-	if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
-		MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
-		
-	updateMissile();
-	updateVampire();
+       	if(MAIN_HANDLER.yspd < 0) {
+                MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
+       	} else {
+                MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpDown));
+       	}
+   	}
+   }
+
+   move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
+   	MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
+   if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)
+   	MAIN_SPRITE.attribute1 = SET_X(MAIN_SPRITE.attribute1, MAIN_HANDLER.x);
+   if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
+   	MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
+   else if(MAIN_HANDLER.y >= 160)
+      resetAfterLoop();
+
+   updateMissile();
+   updateVampire();
+   moveViewport();
 }
 
 void DrawLevelBackground() {
