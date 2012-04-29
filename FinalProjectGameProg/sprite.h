@@ -1,3 +1,7 @@
+// Function Prototypes
+void moveViewport();
+
+
 // Defines
 #define MAIN_HANDLER spriteHandlers[0]
 #define MAIN_SPRITE sprites[0]
@@ -78,6 +82,8 @@ typedef struct tagSpriteHandler
 	int fuel;
 	int totalFuel;
 	int health;
+	boolean onScreen;
+	boolean passed;
 	AngleInfo angle;
 	AnimationHandler idle;
 	AnimationHandler standing;
@@ -101,6 +107,10 @@ typedef struct OBJ_AFFINE
     s16 pd;
 } ALIGN4 OBJ_AFFINE;
 
+
+
+
+
 // Global Variables
 // Copy of OAM
 Sprite sprites[128];
@@ -108,14 +118,9 @@ Sprite sprites[128];
 // Sprite Handler array
 SpriteHandler spriteHandlers[128];
 
-void resetAfterLoop();
 
-void takeDamage(SpriteHandler *sprite, int damage) {
-   if(sprite->health - damage < 1)
-      resetAfterLoop();
-   else
-      sprite->health -= damage;
-}
+
+
 
 int NextFrameLocation(AnimationHandler *handler) {
 	if(handler->currFrame >= handler->numFrames - 1)
@@ -128,6 +133,8 @@ int PrevFrameLocation(AnimationHandler *handler) {
 	    handler->currFrame = handler->numFrames;
 	return handler->frameLocation[--handler->currFrame];
 }
+
+
 
 void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
 	if(x >= 0 && x < level.pixelXMax) {
@@ -146,16 +153,11 @@ void setSpriteLoc(SpriteHandler *sprite, int x, int y) {
 //Checks a single pixel if there is a solid object
 bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
-	int tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
-	int pixel = hitmap_Tiles[tileStart + (x%8) + (8*(y%8))];
-   int color = level_Palette[pixel];
-	if(RED == color || DGREEN == color || YELLOW == color || BLUE == color ||
-      PURPLE == color || LGREEN == color) {
+	u16 tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
+	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
+	if(1 == pixel || 2 == pixel || 3 == pixel || 4 == pixel || 5 == pixel || 6 == pixel) {
 		rval = 1;
-	} else if( PINK == color ) {
-      rval = 1;
-      takeDamage(sprite, 1);
-   }
+	}
 	return rval;
 }
 
@@ -165,37 +167,32 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 //angle values based upon what it it
 bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
-	int tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
-	int pixel = hitmap_Tiles[tileStart + (x%8) + (8*(y%8))];
-	int color = level_Palette[pixel];
-	if(RED == color || BLUE == color || PURPLE == color) {
+	u16 tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
+	u8 pixel = level_Tiles[tileStart + (x%8) + (8*(y%8))];
+	if(1 == pixel || 2 == pixel || 3 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = 0;
 		sprite->angle.cosAngle = 1;
 		sprite->angle.slopeFactor = 0;
 	}
-	if(DGREEN == color) {
+	if(4 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = .7;
 		sprite->angle.cosAngle = .7;
 		sprite->angle.slopeFactor = -.15;
 	}
-	if(YELLOW == color) {
+	if(5 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = .7;
 		sprite->angle.cosAngle = .7;
 		sprite->angle.slopeFactor = .15;
 	}
-	if(LGREEN == color) {
+	if(6 == pixel) {
 		rval = 1;
 		sprite->angle.sinAngle = .44;
 		sprite->angle.cosAngle =  .89;
 		sprite->angle.slopeFactor = -.08;
 	}
-	if(PINK == color) {
-      rval = 1;
-      takeDamage(sprite, 1);
-   }
 	return rval;
 }
 
@@ -300,6 +297,42 @@ void move(SpriteHandler *sprite, int x, int y) {
 		} else {
          x = newX;
       }
+	   moveViewport();
+		setSpriteLoc(sprite,x,newY);
+	} else if(sprite->mode == AIR) {
+      int newY =  checkABSensors(sprite,x,y);
+		if(newY == -1 || sprite->yspd < 0) { //in air
+         newY = checkEFSensors(sprite,x,y);
+         if((newX = checkCDSensors(sprite,x,newY)) != -1) {
+			   x = newX;
+		   }
+			moveViewport();
+			setSpriteLoc(sprite,x,newY);
+		} else { //landed
+			sprite->mode = GROUND;
+			sprite->yspd = 0;
+			moveViewport();
+			setSpriteLoc(sprite,x,newY);
+		}
+	}
+}
+
+
+
+void moveOther(SpriteHandler *sprite, int x, int y) 
+{
+   int newX;
+	if(sprite->mode == GROUND) {
+      int newY = sprite->worldy;
+		if((newX = checkCDSensors(sprite, x, y)) == -1) {
+	        newY = checkABSensors(sprite,x,y);
+	        if(newY == -1) {
+				sprite->mode = AIR;
+				sprite->yspd = sprite->yspd + 1;
+	        }
+		} else {
+         x = newX;
+      }
 		setSpriteLoc(sprite,x,newY);
 	} else if(sprite->mode == AIR) {
       int newY =  checkABSensors(sprite,x,y);
@@ -315,6 +348,8 @@ void move(SpriteHandler *sprite, int x, int y) {
 			setSpriteLoc(sprite,x,newY);
 		}
 	}
+	
+	
 }
 
 
@@ -366,6 +401,7 @@ void InitSprites() {
 		sprites[n].attribute0 = 160;
 		sprites[n].attribute1 = 240;
 	}
+
 	
 	// Initialize robot sprite
 	MAIN_HANDLER.alive = 1;
@@ -388,8 +424,8 @@ void InitSprites() {
 	MAIN_HANDLER.running.numFrames = 2;
 	MAIN_HANDLER.jumpUp.numFrames = 2;
 	MAIN_HANDLER.jumpDown.numFrames = 2;
-	MAIN_HANDLER.x = 100;
-	MAIN_HANDLER.y = 0;
+	MAIN_HANDLER.x = 50;
+	MAIN_HANDLER.y = 50;
 	MAIN_HANDLER.xspd = 0;
 	MAIN_HANDLER.yspd = 0;
 	MAIN_HANDLER.gspd = 0;
@@ -423,8 +459,10 @@ void InitSprites() {
 	sprites[1].attribute1 = SIZE_64 | 0;
 	sprites[1].attribute2 = 288;
 
-   spriteHandlers[1].idle.currFrame = 0;
-   spriteHandlers[1].idle.numFrames = 11;
+    spriteHandlers[1].idle.currFrame = 0;
+    spriteHandlers[1].idle.numFrames = 11;
+
+
 	
 	// Initialize fuel bar sprite
 	sprites[2].attribute0 = TALL | COLOR_256 | 0;
@@ -436,7 +474,7 @@ void InitSprites() {
 	
 	
 	
-	// Initialize rocket sprite
+	// Initialize missile sprite
 	sprites[3].attribute0 = SQUARE | COLOR_256 | 160;
 	sprites[3].attribute1 = SIZE_16 | 240;
 	sprites[3].attribute2 = sprites[2].attribute2 + SPRITE_CHUNKS64_TALL;
@@ -462,9 +500,13 @@ void InitSprites() {
 	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
 
+	
+	
+	
+	
 	// Initialize vampire sprite
-	sprites[4].attribute0 = SQUARE | COLOR_256 | 66;
-	sprites[4].attribute1 = SIZE_32 | 160;
+	sprites[4].attribute0 = SQUARE | COLOR_256 | 50;
+	sprites[4].attribute1 = SIZE_32 | 240;
 	sprites[4].attribute2 = sprites[3].attribute2 + SPRITE_CHUNKS16_SQUARE * 4;
 
 	spriteHandlers[4].idle.frameLocation[0] = sprites[4].attribute2;
@@ -479,14 +521,25 @@ void InitSprites() {
 	spriteHandlers[4].hitBox.negXOffset = 7;
 	spriteHandlers[4].hitBox.negYOffset = 2;
 	spriteHandlers[4].hitBox.width = 14;
-	spriteHandlers[4].hitBox.height = 27;
+	spriteHandlers[4].hitBox.height = 29;
 	
+	spriteHandlers[4].height = 32;
+	spriteHandlers[4].width = 32;
 	
 	spriteHandlers[4].alive = true;
 	spriteHandlers[4].health = 100;
 	
 	spriteHandlers[4].dir = 1;
-	spriteHandlers[4].x = 160;
-	spriteHandlers[4].y = 66;	
+	spriteHandlers[4].x = 200;
+	spriteHandlers[4].worldx = 200;
+	spriteHandlers[4].y = 10;	
+	spriteHandlers[4].worldy = 10;
+	
+	spriteHandlers[4].yspd = 0;
+	spriteHandlers[4].xspd = 0;
+	
+	
+	spriteHandlers[4].onScreen = true;
+	spriteHandlers[4].mode = AIR;
 }
 

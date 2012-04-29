@@ -15,9 +15,9 @@
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
 int recentlyShot = 0, recentlyHit = 0, recentlyDied = 0;
-int maxLevel = 1;
-bool missile = false;
-bool needReset = false;
+boolean missile = false;
+
+int oldVOFFS, oldHOFFS;
 
 void updateMissile();
 void despawnMissile();
@@ -48,11 +48,10 @@ void LoadContent() {
 	DMAFastCopy((void*)level_Palette,(void*)BGPaletteMem,
 		256,DMA_16NOW);
 	DMAFastCopy((void*)level_Tiles,(void*)CharBaseBlock(0),
-		level.tileSize/4,DMA_32NOW);
-   DMAFastCopy((void*)bg_Tiles,(void*)CharBaseBlock(2),
-		bg.tileSize/4,DMA_32NOW);
+		level.mapSize/4,DMA_32NOW);
 	DMAFastCopy((void*)missilePalette,(void*)SpritePal,256,DMA_16NOW);
 
+	SpritePal[66] = RGB(31,31,31);
 	
 	int nextSprite = 0;
 	
@@ -113,58 +112,24 @@ void LoadContent() {
 	
 }
 
-void reset() {
-   needReset = false;
-   currLevel = 0;
-   Initialize();
-   LoadContent();
-   WaitVBlank();
-}
-
-void resetAfterLoop() {
-   needReset = true;
-}
-
-bool withinGoal() {
-   if(MAIN_HANDLER.worldx + MAIN_HANDLER.width/2 > level.goal.lx &&
-      MAIN_HANDLER.worldy + MAIN_HANDLER.height/2 > level.goal.ly &&
-      MAIN_HANDLER.worldx + MAIN_HANDLER.width/2 < level.goal.rx &&
-      MAIN_HANDLER.worldy + MAIN_HANDLER.height/2 < level.goal.ry) {
-      return true;
-   } else {
-      return false;
-   }
-}
-
-void nextLevel() {
-   if(currLevel >= maxLevel) {
-      //win effect
-   } else {
-      currLevel++;
-      Initialize();
-      LoadContent();
-      WaitVBlank();
-   }
-}
-
 void moveViewport() {
 	int nx = MAIN_HANDLER.worldx - 120 + MAIN_HANDLER.width/2;
-  	if(MAIN_HANDLER.worldx < level.pixelXMax - level.rightOffset
+  	if(MAIN_HANDLER.worldx < level.pixelXMax - 136
       && MAIN_HANDLER.worldx > 119 + MAIN_HANDLER.width/2)
 	{
-     	level.dx += nx - level.x;
+		level.dx += nx - level.x;
      	bg.dx += (nx/3 - bg.x);
-	   level.x = nx;
-	   bg.x += (nx/3 - bg.x);
+		level.x = nx;
+		bg.x += (nx/3 - bg.x);
 	}
 	int ny = MAIN_HANDLER.worldy - 80 + MAIN_HANDLER.height/2;
-	if(MAIN_HANDLER.worldy < level.pixelYMax - level.botOffset
+	if(MAIN_HANDLER.worldy < level.pixelYMax - 96
       && MAIN_HANDLER.worldy > 79 + MAIN_HANDLER.height/2)
 	{
-     	level.dy += ny - level.y;
+		level.dy += ny - level.y;
      	bg.dy += (ny/3 - bg.y);
-	   level.y = ny;
-	   bg.y += (ny/3 - bg.y);
+		level.y = ny;
+	    bg.y += (ny/3 - bg.y);	   
 	}
 }
 
@@ -278,81 +243,76 @@ void fuelUpdate()
 }
 
 void Update() {
-   if(needReset)
-      reset();
-   if(withinGoal())
-      nextLevel();
-
-   fuelUpdate();
-   ButtonPoll();
-   moveXDir();
-   if(MAIN_HANDLER.mode == GROUND)
-   {
-      if(MAIN_HANDLER.totalFuel < 400)
-      {
-          MAIN_HANDLER.fuel += 1;
-          MAIN_HANDLER.totalFuel += 1;
-      }
-
-   	if(key_hit(KEY_A))
-   	{
-   		MAIN_HANDLER.mode = AIR;
-   		MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
-   	}
-   	MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
-   		((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
-   		* MAIN_HANDLER.angle.sinAngle) - .05;
-
-   	if(MAIN_HANDLER.gspd < 0)
-   	    MAIN_HANDLER.gspd = 0;
-
+    fuelUpdate();
+    ButtonPoll();
+    moveXDir();
+    if(MAIN_HANDLER.mode == GROUND)
+    {
+        if(MAIN_HANDLER.totalFuel < 400)
+        {
+            MAIN_HANDLER.fuel += 1;
+            MAIN_HANDLER.totalFuel += 1;
+        }
+            
+		if(key_hit(KEY_A))
+		{
+			MAIN_HANDLER.mode = AIR;
+			MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
+		}
+		MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
+			((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
+			* MAIN_HANDLER.angle.sinAngle) - .05;
+			
+		if(MAIN_HANDLER.gspd < 0)
+		    MAIN_HANDLER.gspd = 0;
+			
         MAIN_HANDLER.xspd = (MAIN_HANDLER.gspd * MAIN_HANDLER.angle.cosAngle) *
-   		MAIN_HANDLER.dir;
-   	if(MAIN_HANDLER.mode != AIR)
-   		MAIN_HANDLER.yspd = (MAIN_HANDLER.gspd*MAIN_HANDLER.angle.sinAngle);
+			MAIN_HANDLER.dir;
+		if(MAIN_HANDLER.mode != AIR)
+			MAIN_HANDLER.yspd = (MAIN_HANDLER.gspd*MAIN_HANDLER.angle.sinAngle);
 
         if(MAIN_HANDLER.xspd == 0) {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.standing));
     	} else {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-   	}
-   }
-
-   if(MAIN_HANDLER.mode == AIR)
-   {
-       if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
-       {
-           MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-           if(MAIN_HANDLER.yspd > -2)
-               MAIN_HANDLER.yspd -= 0.25;
+		}	
+	}
+	
+	if(MAIN_HANDLER.mode == AIR)
+	{
+	    if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
+	    {
+	        MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
+	        if(MAIN_HANDLER.yspd > -2)
+	            MAIN_HANDLER.yspd -= 0.25;
             MAIN_HANDLER.fuel -= 4;
             MAIN_HANDLER.totalFuel -= 4;
         }
         else
         {
             if(MAIN_HANDLER.yspd < 10)
-       		MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
-
-       	if(MAIN_HANDLER.yspd < 0) {
+	    		MAIN_HANDLER.yspd = MAIN_HANDLER.yspd + .25;
+    			
+	    	if(MAIN_HANDLER.yspd < 0) {
                 MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
-       	} else {
+	    	} else {
                 MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpDown));
-       	}
-   	}
-   }
+	    	}
+		}
+	}
+	
 
-   move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
-   	MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
-   if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)
-   	MAIN_SPRITE.attribute1 = SET_X(MAIN_SPRITE.attribute1, MAIN_HANDLER.x);
-   if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
-   	MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
-   else if(MAIN_HANDLER.y >= 160)
-      resetAfterLoop();
-
-   updateMissile();
-   updateVampire();
-   moveViewport();
+	
+	move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
+		MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
+	if(MAIN_HANDLER.x < 240 && MAIN_HANDLER.x >= 0)
+		MAIN_SPRITE.attribute1 = SET_X(MAIN_SPRITE.attribute1, MAIN_HANDLER.x);
+	if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
+		MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
+	
+	
+	updateMissile();
+	updateVampire();
 }
 
 void DrawLevelBackground() {
@@ -394,10 +354,26 @@ void Draw() {
    WaitVBlank();
 	UpdateSpriteMemory();
 	DrawLevelBackground();
+	
+	
+	if (missile)
+	{
+		MISSILE_SPRITE.attribute0 -= level.y - oldVOFFS;
+		MISSILE_HANDLER.y -= level.y -oldVOFFS;
+		MISSILE_SPRITE.attribute1 -= level.x - oldHOFFS;
+		MISSILE_HANDLER.x -= level.x - oldHOFFS;
+	}
+	
+	
 	REG_BG0VOFS = level.y;
 	REG_BG0HOFS = level.x;
 	REG_BG1VOFS = bg.y;
 	REG_BG1HOFS = bg.x;
+	
+	oldVOFFS = level.y;
+	oldHOFFS = level.x;
+	
+	
 }
 
 int main()
@@ -441,8 +417,12 @@ void updateMissile()
 			despawnMissile();
 		}
 	}
-	else if (missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.x, MISSILE_HANDLER.y) != -1)
-	{// Check horizontal collision with map. This isn't working.
+	else if (missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.worldx + MISSILE_HANDLER.width, MISSILE_HANDLER.worldy) != -1)
+	{// Check horizontal collision with map.
+		recentlyHit = 11;
+	}
+	else if (MISSILE_HANDLER.dir == -1 && missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.worldx, MISSILE_HANDLER.worldy) != -1)
+	{
 		recentlyHit = 11;
 	}
 	else if (missile && checkSpriteCollision(&MISSILE_HANDLER, &spriteHandlers[4]))
@@ -465,6 +445,7 @@ void updateMissile()
 		missile = true;
 		missileX = 0;
 		MISSILE_HANDLER.xspd = 0;
+		
 			
 		// "Spawn" the missile
 		MISSILE_SPRITE.attribute1 &= 0xFE00;
@@ -476,6 +457,7 @@ void updateMissile()
 		MISSILE_SPRITE.attribute0 |= MAIN_HANDLER.y + 7;
 		MISSILE_HANDLER.y = MAIN_HANDLER.y + 7;
 		MISSILE_HANDLER.worldy = MAIN_HANDLER.worldy + 7;
+		
 		
 		if (MAIN_HANDLER.flipped == 1)
 		{// Robot facing left
@@ -512,10 +494,15 @@ void updateMissile()
 		{// Hit an edge
 			despawnMissile();
 		}
+		if (MISSILE_HANDLER.y < 0 || MISSILE_HANDLER.y > 160)
+		{// Went off screen
+			despawnMissile();
+		}
 		else
 		{
 			MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
 			MISSILE_SPRITE.attribute1 += MISSILE_HANDLER.xspd;
+			MISSILE_HANDLER.worldx += MISSILE_HANDLER.xspd;
 		}
 			
 	}
@@ -555,10 +542,27 @@ void despawnMissile()
 	missileX = 0;
 }
 
+
+
 void updateVampire()
 {
 	if (spriteHandlers[4].alive == true)
 	{
+		if(spriteHandlers[4].mode == AIR)
+		{
+			if(spriteHandlers[4].yspd < 10)
+				spriteHandlers[4].yspd = spriteHandlers[4].yspd + .25;
+		}
+	
+	
+	
+
+	
+	
+	
+	
+	
+	
 		if (REG_TM2D % 6)
 		{
 			if (rand() % 10 == 0)
@@ -582,21 +586,71 @@ void updateVampire()
 				if (spriteHandlers[4].dir == 1)
 				{//Go right
 					sprites[4].attribute2 = NextFrameLocation(&(spriteHandlers[4].running));
-					sprites[4].attribute1 += 1;
-					spriteHandlers[4].x += 1;
+					spriteHandlers[4].xspd = 1;
+					
 				}
 				else
 				{//Go left
 					sprites[4].attribute2 = NextFrameLocation(&(spriteHandlers[4].running));
-					sprites[4].attribute1 -= 1;
-					spriteHandlers[4].x -= 1;
+					spriteHandlers[4].xspd = -1;
 				}
 			}
 		}
 		else
 		{//Idle
 			sprites[4].attribute2 = spriteHandlers[4].idle.frameLocation[0];
+			spriteHandlers[4].xspd = 0;
 		}
+		
+		
+		
+		
+	
+		
+	
+
+		
+		
+		boolean goodX, goodY;
+
+		moveOther(&spriteHandlers[4], spriteHandlers[4].worldx + spriteHandlers[4].xspd, spriteHandlers[4].worldy + spriteHandlers[4].yspd);
+		
+		if(spriteHandlers[4].x < 240 && spriteHandlers[4].x >= 0)
+		{
+			sprites[4].attribute1 = SET_X(sprites[4].attribute1, spriteHandlers[4].x);
+			goodX = true;
+		}
+		else
+		{
+			goodX = false;
+		}
+		if(spriteHandlers[4].y >= 0 && spriteHandlers[4].y < 160)
+		{
+			sprites[4].attribute0 = SET_Y(sprites[4].attribute0, spriteHandlers[4].y);		
+			goodY = true;
+		}
+		else
+		{
+			goodY = false;
+		}
+		
+		
+		if (goodX && goodY)
+		{
+			spriteHandlers[4].onScreen = true;
+			sprites[4].attribute0 = SET_MODE(sprites[4].attribute0, SPRITE_ENABLE);
+		}
+		else
+		{
+			spriteHandlers[4].onScreen = false;
+			
+			sprites[4].attribute0 = SET_MODE(sprites[4].attribute0, SPRITE_DISABLE);
+		}
+		
+		
+		
+		
+		
 	}
 	else
 	{// Dead
