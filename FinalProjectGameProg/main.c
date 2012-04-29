@@ -23,7 +23,7 @@
 #include "max.c"
 #include "Fire.c"
 
-int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
+int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileDX = 0;
 int recentlyShot = 0, recentlyHit = 0, recentlyDied = 0;
 int maxLevel = 1;
 bool missile = false;
@@ -427,12 +427,20 @@ void Draw() {
 	DrawLevelBackground();
 	
 	
-	if (missile)
+/*	if (missile)
 	{
 		MISSILE_SPRITE.attribute0 -= level.y - oldVOFFS;
 		MISSILE_HANDLER.y -= level.y -oldVOFFS;
 		MISSILE_SPRITE.attribute1 -= level.x - oldHOFFS;
 		MISSILE_HANDLER.x -= level.x - oldHOFFS;
+	}
+*/
+	if (recentlyDied)
+	{
+		spriteHandlers[4].y -= level.y - oldVOFFS;
+		sprites[4].attribute1 -= level.y - oldVOFFS;
+		spriteHandlers[4].x -= level.x - oldHOFFS;
+		sprites[4].attribute1 -= level.x - oldHOFFS;
 	}
 	
 	
@@ -474,13 +482,10 @@ void updateMissile()
 			MISSILE_SPRITE.attribute2 = MISSILE_HANDLER.idle.frameLocation[1];
 		}
 		else
-	// Shoot a missile
-		if (key_hit(KEY_B) && missile == false)
 		{
 			MISSILE_SPRITE.attribute2 = MISSILE_HANDLER.idle.frameLocation[0];
 		}
-		
-		
+			
 		recentlyHit--;
 		
 		if (recentlyHit == 0)
@@ -488,18 +493,18 @@ void updateMissile()
 			despawnMissile();
 		}
 	}
-	else if (missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.worldx + MISSILE_HANDLER.width, MISSILE_HANDLER.worldy) != -1)
+	else if (MISSILE_HANDLER.dir == 1 && missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.worldx + MISSILE_HANDLER.xspd, MISSILE_HANDLER.worldy) != -1)
 	{// Check horizontal collision with map.
-		recentlyHit = 11;
+		recentlyHit = 15;
 	}
-	else if (MISSILE_HANDLER.dir == -1 && missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.worldx, MISSILE_HANDLER.worldy) != -1)
-	{
-		recentlyHit = 11;
+	else if (MISSILE_HANDLER.dir == -1 && missile && checkCDSensors(&MISSILE_HANDLER, MISSILE_HANDLER.worldx + MISSILE_HANDLER.xspd - 30, MISSILE_HANDLER.worldy) != -1)
+	{// Check horizontal collision with map.
+		recentlyHit = 15;
 	}
 	else if (missile && checkSpriteCollision(&MISSILE_HANDLER, &spriteHandlers[4]))
 	{// Check to see if missile hit vampire
 	
-		recentlyHit = 11;
+		recentlyHit = 15;
 		
 		spriteHandlers[4].health -= 50;
 		
@@ -517,19 +522,14 @@ void updateMissile()
 		MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
 		recentlyShot = 8;
 		missile = true;
-		missileX = 0;
+		missileDX = 0;
 		MISSILE_HANDLER.xspd = 0;
 		
 			
 		// "Spawn" the missile
-		MISSILE_SPRITE.attribute1 &= 0xFE00;
-		MISSILE_SPRITE.attribute1 |= MAIN_HANDLER.x + 27;
-		MISSILE_HANDLER.x = MAIN_HANDLER.x + 27;
+		MISSILE_SPRITE.attribute0 = SET_MODE(MISSILE_SPRITE.attribute0, SPRITE_ENABLE);
+		
 		MISSILE_HANDLER.worldx = MAIN_HANDLER.worldx + 27;
-
-		MISSILE_SPRITE.attribute0 &= 0xFF00;
-		MISSILE_SPRITE.attribute0 |= MAIN_HANDLER.y + 7;
-		MISSILE_HANDLER.y = MAIN_HANDLER.y + 7;
 		MISSILE_HANDLER.worldy = MAIN_HANDLER.worldy + 7;
 		
 		
@@ -537,7 +537,7 @@ void updateMissile()
 		{// Robot facing left
 				
 			// Adjust spawn
-			MISSILE_SPRITE.attribute1 -= 27;
+			MISSILE_HANDLER.worldx -= 27;
 				
 			// Flip the rocket
 			MISSILE_SPRITE.attribute1 |= HORIZONTAL_FLIP;
@@ -563,39 +563,74 @@ void updateMissile()
 	// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
 	else if (missile == true)
 	{					
-				
-		if (MISSILE_HANDLER.x > 230 || MISSILE_HANDLER.x < 0)
-		{// Hit an edge
-			despawnMissile();
-		}
-		if (MISSILE_HANDLER.y < 0 || MISSILE_HANDLER.y > 160)
-		{// Went off screen
-			despawnMissile();
+		int goodX, goodY;
+		
+
+
+		MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
+		MISSILE_HANDLER.worldx += MISSILE_HANDLER.xspd;
+			
+	
+	
+		setSpriteLoc(&MISSILE_HANDLER, MISSILE_HANDLER.worldx, MISSILE_HANDLER.worldy);
+	
+	
+	
+	
+		if(MISSILE_HANDLER.x < 240 && MISSILE_HANDLER.x > 0)
+		{
+			MISSILE_SPRITE.attribute1 = SET_X(MISSILE_SPRITE.attribute1, MISSILE_HANDLER.x);
+			goodX = true;
 		}
 		else
 		{
-			MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
-			MISSILE_SPRITE.attribute1 += MISSILE_HANDLER.xspd;
-			MISSILE_HANDLER.worldx += MISSILE_HANDLER.xspd;
+			goodX = false;
 		}
+		if(MISSILE_HANDLER.y >= 0 && MISSILE_HANDLER.y < 160)
+		{
+			MISSILE_SPRITE.attribute0 = SET_Y(MISSILE_SPRITE.attribute0, MISSILE_HANDLER.y);		
+			goodY = true;
+		}
+		else
+		{
+			goodY = false;
+		}
+		
+		
+		if (goodX && goodY)
+		{
+			MISSILE_SPRITE.attribute0 = SET_MODE(MISSILE_SPRITE.attribute0, SPRITE_ENABLE);
+		}
+		else
+		{	
+			MISSILE_SPRITE.attribute0 = SET_MODE(MISSILE_SPRITE.attribute0, SPRITE_DISABLE);
+			despawnMissile();
+		}
+	
+	
+	
+	
+	
+	
 			
+	
+		if (missileDX % 8 == 0)
+		{
+			if (MISSILE_HANDLER.dir == 1)
+			{
+				MISSILE_HANDLER.xspd++;
+			}
+			else
+			{
+				MISSILE_HANDLER.xspd--;
+			}
+			MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
+		}	
+		missileDX++;
+		
+		
+		
 	}
-	
-			
-	
-	if (missileX % 8 == 0)
-	{
-		if (MISSILE_HANDLER.dir == 1)
-		{
-			MISSILE_HANDLER.xspd++;
-		}
-		else
-		{
-			MISSILE_HANDLER.xspd--;
-		}
-		MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
-	}	
-	missileX++;
 	// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~	
 } // End updateMissile() function
 
@@ -613,7 +648,7 @@ void despawnMissile()
 	MISSILE_HANDLER.xspd = 0;
 					
 	missile = false;
-	missileX = 0;
+	missileDX = 0;
 }
 
 

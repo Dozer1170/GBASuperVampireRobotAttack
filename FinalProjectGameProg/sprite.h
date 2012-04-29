@@ -407,7 +407,7 @@ boolean checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 	}
 	else
 	{// Sprite 2 on left
-		if (sprite2->x + sprite2->hitBox.xOffset + sprite2->hitBox.width > sprite1->x + sprite1->hitBox.xOffset)
+		if (sprite2->x + sprite2->hitBox.xOffset + sprite2->hitBox.width > sprite1->x - sprite1->width)
 		{
 			return true;
 		}
