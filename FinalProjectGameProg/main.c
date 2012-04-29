@@ -11,7 +11,14 @@
 #include "sprite/fuelbars.h"
 #include "sprite/powerups.h"
 
-
+//Sound Stuff
+#include "Sound.h"
+#include "timer.h"
+#include "Rocket.c"
+#include "Idle2.c"
+#include "Start.c"
+#include "max.c"
+#include "Fire.c"
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileX = 0;
 int recentlyShot = 0, recentlyHit = 0, recentlyDied = 0;
@@ -20,6 +27,12 @@ bool missile = false;
 bool needReset = false;
 
 int oldVOFFS, oldHOFFS;
+
+sound s_move = {&rocket, 8000, 32044};
+sound s_jump = {&max, 8000, 7162};
+sound s_start = {&start, 8000, 10454};
+sound s_idle = {&idle2, 8000, 27518};
+sound s_shoot = {&fire, 8000, 11164};
 
 void updateMissile();
 void despawnMissile();
@@ -36,7 +49,9 @@ void Initialize() {
 	SetMode(0x0 | BG0_ENABLE | BG1_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
 	InitMaps();
 	InitSprites();
+	SetInterupt();
 	
+	PlaySound(&s_start);
 	
 	//Set up timers
 	REG_TM1CNT = TIMER_FREQUENCY_256;
@@ -175,6 +190,9 @@ void moveXDir()
 {
     if(key_is_down(KEY_LEFT))
     {
+        if(!SampleLength || key_was_up(KEY_LEFT) && MAIN_HANDLER.mode == GROUND && !missileFire)
+            PlaySound(&s_move);
+
         if( MAIN_HANDLER.dir == -1)
         {
             if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
@@ -197,6 +215,9 @@ void moveXDir()
     }
     if(key_is_down(KEY_RIGHT))
     {
+        if(!SampleLength || key_was_up(KEY_RIGHT) && MAIN_HANDLER.mode == GROUND && !missileFire)
+            PlaySound(&s_move);
+        
         if( MAIN_HANDLER.dir == 1)
         {
             if(MAIN_HANDLER.gspd + MAIN_HANDLER.acc < MAIN_HANDLER.maxGspd)
@@ -251,9 +272,9 @@ void fuelUpdate()
             }	
         }
     }
-    
+
     //FUEL BAR DECREASES
-    if(MAIN_HANDLER.fuel <= 0 && MAIN_HANDLER.totalFuel > 0)
+    if(MAIN_HANDLER.fuel < 0 && MAIN_HANDLER.totalFuel > 0)
     {
         MAIN_HANDLER.fuel += 40;
 		if (FUELBAR_HANDLER.idle.currFrame == FUELBAR_HANDLER.idle.numFrames)
@@ -301,6 +322,8 @@ void Update() {
    	{
    		MAIN_HANDLER.mode = AIR;
    		MAIN_HANDLER.yspd -= MAIN_HANDLER.jumpStr;
+   		
+   		PlaySound(&s_jump);
    	}
    	MAIN_HANDLER.gspd = MAIN_HANDLER.gspd +
    		((MAIN_HANDLER.angle.slopeFactor * MAIN_HANDLER.dir)
@@ -308,7 +331,6 @@ void Update() {
 
    	if(MAIN_HANDLER.gspd < 0)
    	    MAIN_HANDLER.gspd = 0;
-
         MAIN_HANDLER.xspd = (MAIN_HANDLER.gspd * MAIN_HANDLER.angle.cosAngle) *
    		MAIN_HANDLER.dir;
    	if(MAIN_HANDLER.mode != AIR)
@@ -343,6 +365,9 @@ void Update() {
        	}
    	}
    }
+   
+   if(!SampleLength || key_released(KEY_RIGHT) || key_released(KEY_LEFT))
+	   PlaySound(&s_idle);
    
    move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
    	MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
@@ -483,6 +508,9 @@ void updateMissile()
 	}
 	else if (key_hit(KEY_B) && missile == false)
 	{// Shoot a missile if B is hit
+        PlaySound(&s_shoot);
+        missileFire = true;
+	
 		MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
 		recentlyShot = 8;
 		missile = true;
@@ -597,15 +625,7 @@ void updateVampire()
 				spriteHandlers[4].yspd = spriteHandlers[4].yspd + .25;
 		}
 	
-	
-	
 
-	
-	
-	
-	
-	
-	
 		if (REG_TM2D % 6)
 		{
 			if (rand() % 10 == 0)
@@ -645,15 +665,6 @@ void updateVampire()
 			spriteHandlers[4].xspd = 0;
 		}
 		
-		
-		
-		
-	
-		
-	
-
-		
-		
 		boolean goodX, goodY;
 
 		moveOther(&spriteHandlers[4], spriteHandlers[4].worldx + spriteHandlers[4].xspd, spriteHandlers[4].worldy + spriteHandlers[4].yspd);
@@ -689,10 +700,6 @@ void updateVampire()
 			
 			sprites[4].attribute0 = SET_MODE(sprites[4].attribute0, SPRITE_DISABLE);
 		}
-		
-		
-		
-		
 		
 	}
 	else
@@ -733,6 +740,7 @@ void updateVampire()
 		}
 	}
 }
+
 
 
 
