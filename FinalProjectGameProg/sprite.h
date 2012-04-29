@@ -112,11 +112,35 @@ SpriteHandler spriteHandlers[128];
 
 void resetAfterLoop();
 
-void takeDamage(SpriteHandler *sprite, int damage) {
-   if(sprite->health - damage < 1)
-      resetAfterLoop();
-   else
-      sprite->health -= damage;
+void takeDamage(SpriteHandler *sprite, int damage) 
+{
+	static int dmgDX;
+	static int lastTime;
+	int x, y, n;
+	
+	if(sprite->health - damage < 1)
+		resetAfterLoop();
+	else
+    {
+		sprite->health -= damage;
+		dmgDX += damage;
+		
+		
+		while (dmgDX - 10 > 0)
+		{
+			//Load lower health bar
+			HEALTHBAR_HANDLER.idle.currFrame++;
+					
+			x = SPRITE_DATA32_SQUARE * 9;
+			y = HEALTHBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
+			for (n = 0; n < SPRITE_DATA64_TALL; n++)
+			{
+				SpriteData[x] = barsData[n + y];
+				x++;
+			}
+			dmgDX -= 10;
+		}
+	}
 }
 
 int NextFrameLocation(AnimationHandler *handler) {
@@ -447,7 +471,7 @@ void InitSprites() {
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_HANDLER.fuel = 40;
 	MAIN_HANDLER.totalFuel = 440;
-	MAIN_HANDLER.health = 10;
+	MAIN_HANDLER.health = 100;
 	MAIN_SPRITE.attribute0 = COLOR_256 | SQUARE | MAIN_HANDLER.x;
 	MAIN_SPRITE.attribute1 = SIZE_32 | MAIN_HANDLER.y;
 	MAIN_SPRITE.attribute2 = MAIN_HANDLER.standing.frameLocation[0];
