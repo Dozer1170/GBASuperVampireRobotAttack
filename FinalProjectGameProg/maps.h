@@ -12,6 +12,11 @@
 #include "BackgroundSource/outdoorlevel.raw.c"
 #include "BackgroundSource/outdoorlandscape.map.c"
 #include "BackgroundSource/outdoorlandscape.raw.c"
+#include "BackgroundSource/gameover.raw.c"
+#include "BackgroundSource/win.raw.c"
+
+//Nuclear bomb image from: brookwoodhistory.wikispaces.com
+
 //Defines
 #define FACTORY_TILE_SET_SIZE 9280
 
@@ -77,9 +82,9 @@ void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
 {
 	int i;
 	for(i = 0; i < 32; i++)
-	{ int *p = 0x3000000;
-      *p  = (bgXOff + i) + (mapWidth*bgRow);
-      toMap[((i+screenXOff)%32) + screenYRow * 32] = fromMap[*p];
+	{
+      toMap[((i+screenXOff)%32) + screenYRow * 32] =
+         fromMap[(bgXOff + i) + (mapWidth*bgRow)];
 	}
 }
 

@@ -12,8 +12,6 @@
 
 #include "sprite.h"
 
-
-
 //Sound Stuff
 #include "Sound.h"
 #include "timer.h"
@@ -41,7 +39,10 @@ void updateMissile();
 void despawnMissile();
 void updateVampire();
 
-
+inline void DrawPixel3(int x, int y, unsigned short c)
+{
+	videoBuffer[y*240+x]=c;
+}
 
 void UpdateSpriteMemory(void)
 {
@@ -146,6 +147,24 @@ void resetAfterLoop() {
    needReset = true;
 }
 
+void gameOver() {
+	SetMode(MODE_3 | BG2_ENABLE);
+
+	extern const unsigned short gameover_Bitmap[];
+
+	int x, y;
+	for(y = 0; y < 160; y++)
+	{
+		for(x = 0; x < 240; x++)
+			DrawPixel3(x,y,gameover_Bitmap[y*240 + x]);
+	}
+	
+	while(!key_hit(KEY_START)) {
+      ButtonPoll();
+   }
+   resetAfterLoop();
+}
+
 bool withinGoal() {
    if(MAIN_HANDLER.worldx + MAIN_HANDLER.width/2 > level.goal.lx &&
       MAIN_HANDLER.worldy + MAIN_HANDLER.height/2 > level.goal.ly &&
@@ -159,7 +178,21 @@ bool withinGoal() {
 
 void nextLevel() {
    if(currLevel >= maxLevel) {
-      //win effect
+      SetMode(MODE_3 | BG2_ENABLE);
+
+   	extern const unsigned short win_Bitmap[];
+
+   	int x, y;
+   	for(y = 0; y < 160; y++)
+   	{
+   		for(x = 0; x < 240; x++)
+   			DrawPixel3(x,y,win_Bitmap[y*240 + x]);
+   	}
+
+   	while(!key_hit(KEY_START)) {
+         ButtonPoll();
+      }
+      resetAfterLoop();
    } else {
       currLevel++;
       Initialize();

@@ -110,7 +110,7 @@ Sprite sprites[128];
 // Sprite Handler array
 SpriteHandler spriteHandlers[128];
 
-void resetAfterLoop();
+void gameOver();
 
 void takeDamage(SpriteHandler *sprite, int damage) 
 {
@@ -119,7 +119,7 @@ void takeDamage(SpriteHandler *sprite, int damage)
 	int x, y, n;
 	
 	if(sprite->health - damage < 1)
-		resetAfterLoop();
+		gameOver();
 	else
     {
 		sprite->health -= damage;

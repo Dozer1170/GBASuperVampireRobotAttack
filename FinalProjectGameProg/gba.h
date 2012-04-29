@@ -3,6 +3,8 @@
 #define REG_DISPCNT *(unsigned long*) 0x4000000
 #define REG_VCOUNT *(volatile unsigned short*)0x04000006
 
+unsigned short* videoBuffer = (unsigned short*) 0x6000000;
+
 #define MODE_3 0x3
 #define BG0_ENABLE 0x100
 #define BG1_ENABLE 0x200
