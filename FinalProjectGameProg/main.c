@@ -2,7 +2,6 @@
 #include <math.h>
 #include "gba.h"
 #include "maps.h"
-#include "sprite.h"
 
 #include "sprite/robotsprite.h"
 #include "sprite/missile.h"
@@ -10,6 +9,10 @@
 #include "sprite/bars.h"
 #include "sprite/fuelbars.h"
 #include "sprite/powerups.h"
+
+#include "sprite.h"
+
+
 
 //Sound Stuff
 #include "Sound.h"
