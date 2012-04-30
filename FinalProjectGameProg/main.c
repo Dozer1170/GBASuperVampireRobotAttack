@@ -10,8 +10,6 @@
 #include "sprite/fuelbars.h"
 #include "sprite/powerups.h"
 
-#include "sprite.h"
-
 //Sound Stuff
 #include "Sound.h"
 #include "timer.h"
@@ -20,6 +18,12 @@
 #include "Start.c"
 #include "max.c"
 #include "Fire.c"
+#include "hit.c"
+#include "over.c"
+#include "youwin.c"
+
+#include "sprite.h"
+
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileDX = 0;
 
@@ -35,6 +39,8 @@ sound s_jump = {&max, 8000, 7162};
 sound s_start = {&start, 8000, 10454};
 sound s_idle = {&idle2, 8000, 27518};
 sound s_shoot = {&fire, 8000, 11164};
+sound s_gameover = {&gameover, 8000, 110510};
+sound s_youwin = {&youwin, 8000, 133968};
 
 void updateMissile();
 void despawnMissile();
@@ -156,6 +162,8 @@ void resetAfterLoop() {
 
 void gameOver() {
    SetMode(MODE_3 | BG2_ENABLE);
+   
+   PlaySound(&s_gameover);
 	loadFullscreenBitmap(gameover_Bitmap);
 	while(!key_hit(KEY_START)) {
       ButtonPoll();
@@ -178,6 +186,7 @@ void nextLevel() {
    if(currLevel >= maxLevel) {
       SetMode(MODE_3 | BG2_ENABLE);
       loadFullscreenBitmap(win_Bitmap);
+      PlaySound(&s_youwin);
    	while(!key_hit(KEY_START)) {
          ButtonPoll();
       }
@@ -185,6 +194,7 @@ void nextLevel() {
    } else {
       SetMode(MODE_3 | BG2_ENABLE);
       loadFullscreenBitmap(loading_Bitmap);
+      SamplePosition = -2; //interrupt sound during loading screen
       while(!key_hit(KEY_START)) {
          ButtonPoll();
       }
@@ -399,8 +409,10 @@ void Update() {
    	}
    }
    
-   if(!SampleLength || key_released(KEY_RIGHT) || key_released(KEY_LEFT))
+   if((!SampleLength || key_released(KEY_RIGHT) || key_released(KEY_LEFT)) && MAIN_HANDLER.mode != AIR)
 	   PlaySound(&s_idle);
+   else if(!SampleLength)
+        PlaySound(&s_move);
    
    move(&MAIN_HANDLER,MAIN_HANDLER.worldx + MAIN_HANDLER.xspd,
    	MAIN_HANDLER.worldy + MAIN_HANDLER.yspd);
@@ -822,7 +834,5 @@ void updateVampire()
 	}
 	}
 }
-
-
 
 

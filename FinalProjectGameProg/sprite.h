@@ -18,6 +18,8 @@
 #define GROUND 0
 #define AIR 1
 
+sound s_hit = {&hit, 8000, 5442};
+
 // Typedefs
 typedef struct tagSprite
 {
@@ -114,7 +116,7 @@ SpriteHandler spriteHandlers[20];
 
 void gameOver();
 
-void takeDamage(SpriteHandler *sprite, int damage) 
+void takeDamage(SpriteHandler *sprite, int damage)
 {
 	static int dmgDX;
 	int x, y, n;
@@ -125,6 +127,8 @@ void takeDamage(SpriteHandler *sprite, int damage)
       }
    	else
       {
+        PlaySound(&s_hit);
+
          sprite->health -= damage;
          dmgDX += damage;
          while (dmgDX - 10 > 0)
