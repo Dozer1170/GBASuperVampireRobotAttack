@@ -488,46 +488,48 @@ void InitSprites() {
 	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
 
-	
-	
-	
-	
-	// Initialize vampire sprite
-	sprites[4].attribute0 = SQUARE | COLOR_256 | 50;
-	sprites[4].attribute1 = SIZE_32 | 240;
-	sprites[4].attribute2 = sprites[3].attribute2 + SPRITE_CHUNKS16_SQUARE * 4;
+    initVampires( 200, 10, 4);
+    initVampires( 150, 10, 5);
+}
 
-	spriteHandlers[4].idle.frameLocation[0] = sprites[4].attribute2;
-	spriteHandlers[4].idle.numFrames = 1;
+void initVampires( int worldx, int worldy, int spriteNumber )
+{
+	// Initialize vampire sprite
+	sprites[spriteNumber].attribute0 = SQUARE | COLOR_256 | 240;
+	sprites[spriteNumber].attribute1 = SIZE_32 | 160;
+	sprites[spriteNumber].attribute2 = sprites[3].attribute2 + SPRITE_CHUNKS16_SQUARE * 4;
+
+	spriteHandlers[spriteNumber].idle.frameLocation[0] = sprites[spriteNumber].attribute2;
+	spriteHandlers[spriteNumber].idle.numFrames = 1;
 	
-	spriteHandlers[4].running.numFrames = 2;
-	spriteHandlers[4].running.frameLocation[0] = spriteHandlers[4].idle.frameLocation[0] + SPRITE_CHUNKS32_SQUARE;
-	spriteHandlers[4].running.frameLocation[1] = spriteHandlers[4].running.frameLocation[0] + SPRITE_CHUNKS32_SQUARE;
+	spriteHandlers[spriteNumber].running.numFrames = 2;
+	spriteHandlers[spriteNumber].running.frameLocation[0] = spriteHandlers[spriteNumber].idle.frameLocation[0] + SPRITE_CHUNKS32_SQUARE;
+	spriteHandlers[spriteNumber].running.frameLocation[1] = spriteHandlers[spriteNumber].running.frameLocation[0] + SPRITE_CHUNKS32_SQUARE;
 	
-	spriteHandlers[4].hitBox.xOffset = 7; 
-	spriteHandlers[4].hitBox.yOffset = 2;
-	spriteHandlers[4].hitBox.negXOffset = 7;
-	spriteHandlers[4].hitBox.negYOffset = 2;
-	spriteHandlers[4].hitBox.width = 14;
-	spriteHandlers[4].hitBox.height = 29;
+	spriteHandlers[spriteNumber].hitBox.xOffset = 7;
+	spriteHandlers[spriteNumber].hitBox.yOffset = 2;
+	spriteHandlers[spriteNumber].hitBox.negXOffset = 7;
+	spriteHandlers[spriteNumber].hitBox.negYOffset = 2;
+	spriteHandlers[spriteNumber].hitBox.width = 14;
+	spriteHandlers[spriteNumber].hitBox.height = 29;
 	
-	spriteHandlers[4].height = 32;
-	spriteHandlers[4].width = 32;
+	spriteHandlers[spriteNumber].height = 32;
+	spriteHandlers[spriteNumber].width = 32;
 	
-	spriteHandlers[4].alive = true;
-	spriteHandlers[4].health = 100;
+	spriteHandlers[spriteNumber].alive = true;
+	spriteHandlers[spriteNumber].health = 100;
 	
-	spriteHandlers[4].dir = 1;
-	spriteHandlers[4].x = 200;
-	spriteHandlers[4].worldx = 200;
-	spriteHandlers[4].y = 10;	
-	spriteHandlers[4].worldy = 10;
+	spriteHandlers[spriteNumber].dir = 1;
+	spriteHandlers[spriteNumber].x = 240;
+	spriteHandlers[spriteNumber].worldx = worldx;
+	spriteHandlers[spriteNumber].y = 160;	
+	spriteHandlers[spriteNumber].worldy = worldy;
 	
-	spriteHandlers[4].yspd = 0;
-	spriteHandlers[4].xspd = 0;
+	spriteHandlers[spriteNumber].yspd = 0;
+	spriteHandlers[spriteNumber].xspd = 0;
 	
 	
-	spriteHandlers[4].onScreen = true;
-	spriteHandlers[4].mode = AIR;
+	spriteHandlers[spriteNumber].onScreen = true;
+	spriteHandlers[spriteNumber].mode = AIR;
 }
 

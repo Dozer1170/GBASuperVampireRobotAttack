@@ -22,6 +22,7 @@
 #include "Fire.c"
 
 int healthBarLoadSpot, fuelBarLoadSpot, x, n, y, missileDX = 0;
+
 int recentlyShot = 0, recentlyHit = 0, recentlyDied = 0;
 int maxLevel = 1;
 bool missile = false;
@@ -55,12 +56,11 @@ void Initialize() {
 	SetInterupt();
 	
 	PlaySound(&s_start);
-	
+
 	//Set up timers
 	REG_TM1CNT = TIMER_FREQUENCY_256;
 	REG_TM2CNT = TIMER_ENABLE | TIMER_OVERFLOW;
-	REG_TM1CNT |= TIMER_ENABLE;
-	
+	REG_TM1CNT |= TIMER_ENABLE;	
 }
 
 // Loads the tiles and palettes
@@ -374,16 +374,16 @@ void Update() {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.standing));
     	} else {
             MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-   	}
-   }
-
-   if(MAIN_HANDLER.mode == AIR)
-   {
-       if( key_is_down( KEY_R ) && MAIN_HANDLER.totalFuel > 0 )
-       {
-           MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.running));
-           if(MAIN_HANDLER.yspd > -2)
-               MAIN_HANDLER.yspd -= 0.25;
+		}	
+	}
+	
+	if(MAIN_HANDLER.mode == AIR)
+	{
+	    if( (key_is_down( KEY_UP ) || key_is_down( KEY_R) ) && MAIN_HANDLER.totalFuel > 0 )
+	    {
+	        MAIN_SPRITE.attribute2=NextFrameLocation(&(MAIN_HANDLER.jumpUp));
+	        if(MAIN_HANDLER.yspd > -2)
+	            MAIN_HANDLER.yspd -= 0.25;
             MAIN_HANDLER.fuel -= 4;
             MAIN_HANDLER.totalFuel -= 4;
         }
@@ -590,8 +590,6 @@ void updateMissile()
 		}		
 	}
 	
-	
-	
 	// MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~~~~~
 	else if (missile == true)
 	{					
@@ -680,70 +678,73 @@ void despawnMissile()
 
 void updateVampire()
 {
-	if (spriteHandlers[4].alive == true)
+    int count;
+    int vampireCount = 2;
+    for( count = 0; count < vampireCount; count++)
+    {
+	if (spriteHandlers[4+count].alive == true)
 	{
-		if(spriteHandlers[4].mode == AIR)
+		if(spriteHandlers[4+count].mode == AIR)
 		{
-			if(spriteHandlers[4].yspd < 10)
-				spriteHandlers[4].yspd = spriteHandlers[4].yspd + .25;
+			if(spriteHandlers[4+count].yspd < 10)
+				spriteHandlers[4+count].yspd = spriteHandlers[4+count].yspd + .25;
 		}
 	
-
 		if (REG_TM2D % 6)
 		{
 			if (rand() % 10 == 0)
 			{//Change direction
 				
-				if (spriteHandlers[4].dir == 1)
+				if (spriteHandlers[4+count].dir == 1)
 				{//Flip left
 					sprites[4].attribute1 |= HORIZONTAL_FLIP;
-					spriteHandlers[4].dir = -1;
-					spriteHandlers[4].flipped = true;
+					spriteHandlers[4+count].dir = -1;
+					spriteHandlers[4+count].flipped = true;
 				}
 				else
 				{//Flip Right
-					sprites[4].attribute1 &= ~HORIZONTAL_FLIP;
-					spriteHandlers[4].dir = 1;
-					spriteHandlers[4].flipped = false;
+					sprites[4+count].attribute1 &= ~HORIZONTAL_FLIP;
+					spriteHandlers[4+count].dir = 1;
+					spriteHandlers[4+count].flipped = false;
 				}
 			}
 			else
 			{//Keep moving
-				if (spriteHandlers[4].dir == 1)
+				if (spriteHandlers[4+count].dir == 1)
 				{//Go right
-					sprites[4].attribute2 = NextFrameLocation(&(spriteHandlers[4].running));
-					spriteHandlers[4].xspd = 1;
+					sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
+					spriteHandlers[4+count].xspd = 1;
 					
 				}
 				else
 				{//Go left
-					sprites[4].attribute2 = NextFrameLocation(&(spriteHandlers[4].running));
-					spriteHandlers[4].xspd = -1;
+					sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
+					spriteHandlers[4+count].xspd = -1;
 				}
 			}
 		}
 		else
 		{//Idle
-			sprites[4].attribute2 = spriteHandlers[4].idle.frameLocation[0];
-			spriteHandlers[4].xspd = 0;
+			sprites[4+count].attribute2 = spriteHandlers[4+count].idle.frameLocation[0];
+			spriteHandlers[4+count].xspd = 0;
 		}
 		
 		boolean goodX, goodY;
 
-		move(&spriteHandlers[4], spriteHandlers[4].worldx + spriteHandlers[4].xspd, spriteHandlers[4].worldy + spriteHandlers[4].yspd);
+		move(&spriteHandlers[4+count], spriteHandlers[4+count].worldx + spriteHandlers[4+count].xspd, spriteHandlers[4+count].worldy + spriteHandlers[4+count].yspd);
 		
-		if(spriteHandlers[4].x < 240 && spriteHandlers[4].x >= 0)
+		if(spriteHandlers[4+count].x < 240 && spriteHandlers[4+count].x >= 0)
 		{
-			sprites[4].attribute1 = SET_X(sprites[4].attribute1, spriteHandlers[4].x);
+			sprites[4+count].attribute1 = SET_X(sprites[4+count].attribute1, spriteHandlers[4+count].x);
 			goodX = true;
 		}
 		else
 		{
 			goodX = false;
 		}
-		if(spriteHandlers[4].y >= 0 && spriteHandlers[4].y < 160)
+		if(spriteHandlers[4+count].y >= 0 && spriteHandlers[4+count].y < 160)
 		{
-			sprites[4].attribute0 = SET_Y(sprites[4].attribute0, spriteHandlers[4].y);		
+			sprites[4+count].attribute0 = SET_Y(sprites[4+count].attribute0, spriteHandlers[4+count].y);		
 			goodY = true;
 		}
 		else
@@ -754,14 +755,14 @@ void updateVampire()
 		
 		if (goodX && goodY)
 		{
-			spriteHandlers[4].onScreen = true;
-			sprites[4].attribute0 = SET_MODE(sprites[4].attribute0, SPRITE_ENABLE);
+			spriteHandlers[4+count].onScreen = true;
+			sprites[4+count].attribute0 = SET_MODE(sprites[4+count].attribute0, SPRITE_ENABLE);
 		}
 		else
 		{
-			spriteHandlers[4].onScreen = false;
+			spriteHandlers[4+count].onScreen = false;
 			
-			sprites[4].attribute0 = SET_MODE(sprites[4].attribute0, SPRITE_DISABLE);
+			sprites[4+count].attribute0 = SET_MODE(sprites[4+count].attribute0, SPRITE_DISABLE);
 		}
 		
 	}
@@ -772,19 +773,19 @@ void updateVampire()
 			
 			if (recentlyDied % 5 == 0)
 			{
-				sprites[4].attribute0 &= 0xFF00;
-				sprites[4].attribute0 |= 160;
+				sprites[4+count].attribute0 &= 0xFF00;
+				sprites[4+count].attribute0 |= 160;
 	
-				sprites[4].attribute1 &= 0xFE00;
-				sprites[4].attribute1 |= 240;
+				sprites[4+count].attribute1 &= 0xFE00;
+				sprites[4+count].attribute1 |= 240;
 			}
 			else
 			{
-				sprites[4].attribute0 &= 0xFF00;
-				sprites[4].attribute0 |= spriteHandlers[4].y;
+				sprites[4+count].attribute0 &= 0xFF00;
+				sprites[4+count].attribute0 |= spriteHandlers[4].y;
 	
-				sprites[4].attribute1 &= 0xFE00;
-				sprites[4].attribute1 |= spriteHandlers[4].x;
+				sprites[4+count].attribute1 &= 0xFE00;
+				sprites[4+count].attribute1 |= spriteHandlers[4].x;
 			}
 			
 			
@@ -792,15 +793,16 @@ void updateVampire()
 			
 			if (recentlyDied == 0)
 			{
-				sprites[4].attribute0 &= 0xFF00;
-				sprites[4].attribute0 |= 160;
-				spriteHandlers[4].y = 160;
+				sprites[4+count].attribute0 &= 0xFF00;
+				sprites[4+count].attribute0 |= 160;
+				spriteHandlers[4+count].y = 160;
 	
-				sprites[4].attribute1 &= 0xFE00;
-				sprites[4].attribute1 |= 240;
-				spriteHandlers[4].x = 240;
+				sprites[4+count].attribute1 &= 0xFE00;
+				sprites[4+count].attribute1 |= 240;
+				spriteHandlers[4+count].x = 240;
 			}
 		}
+	}
 	}
 }
 
