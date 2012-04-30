@@ -764,10 +764,10 @@ void updateVampire()
 	}
 	else
 	{// Dead
-		if (recentlyDied)
+		if (spriteHandlers[4+count].recentlyDied)
 		{// Flickery death
 			
-			if (recentlyDied % 5 == 0)
+			if (spriteHandlers[4+count].recentlyDied % 5 == 0)
 			{
 				sprites[4+count].attribute0 &= 0xFF00;
 				sprites[4+count].attribute0 |= 160;
@@ -787,7 +787,7 @@ void updateVampire()
 			
 			recentlyDied--;
 			
-			if (recentlyDied == 0)
+			if (spriteHandlers[4+count].recentlyDied == 0)
 			{
 				sprites[4+count].attribute0 &= 0xFF00;
 				sprites[4+count].attribute0 |= 160;

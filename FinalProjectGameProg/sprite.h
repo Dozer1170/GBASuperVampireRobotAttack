@@ -84,6 +84,7 @@ typedef struct tagSpriteHandler
 	int totalFuel;
 	int health;
 	int recentlyHit;
+	int recentlyDied;
 	boolean onScreen;
 	boolean passed;
 	AngleInfo angle;
