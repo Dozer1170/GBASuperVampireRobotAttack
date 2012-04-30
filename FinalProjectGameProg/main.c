@@ -685,7 +685,12 @@ void despawnMissile()
 void updateVampire()
 {
     int count;
+<<<<<<< Updated upstream
     for( count = 0; count < VAMPIRE_COUNT; count++)
+=======
+    int vampireCount = 3;
+    for( count = 0; count < vampireCount; count++)
+>>>>>>> Stashed changes
     {
 	   if (spriteHandlers[4+count].alive == true)
 	   {
@@ -718,38 +723,6 @@ void updateVampire()
 				spriteHandlers[4+count].xspd = 1;
 			}
 			sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
-		}
-	
-		else if (REG_TM2D % 6)
-		{
-			if (rand() % 10 == 0)
-			{//Change direction
-				
-				    if (spriteHandlers[4+count].dir == 1)
-				    {//Flip left
-					   sprites[4+count].attribute1 |= HORIZONTAL_FLIP;
-					   spriteHandlers[4+count].dir = -1;
-					   spriteHandlers[4+count].flipped = true;
-				    }
-				    else
-				    {//Flip Right
-                        sprites[4+count].attribute1 &= ~HORIZONTAL_FLIP;
-					    spriteHandlers[4+count].dir = 1;
-					    spriteHandlers[4+count].flipped = false;
-				    }
-			 }
-			 else
-			 {//Keep moving
-				if (spriteHandlers[4+count].dir == 1)
-				{//Go right
-					spriteHandlers[4+count].xspd = 1;
-					
-				}
-				else
-				{//Go left
-					spriteHandlers[4+count].xspd = -1;
-				}
-			}
 		}
 		else
 		{//Idle

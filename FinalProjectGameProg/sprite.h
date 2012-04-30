@@ -516,7 +516,13 @@ void InitSprites() {
 	spriteHandlers[3].xspd = 0;
 
     initVampires( 200, 10, 4);
-    initVampires( 150, 10, 5);
+    initVampires( 770,415,5);
+    initVampires( 750,670,6);
+    //initVampires( 1100,360,7);
+    //initVampires( 1920,730,8);
+    //initVampires( 2015,730,9);
+    //initVampires( 2220,730,10);
+    //initVampires( 470,150,11);
 }
 
 void initVampires( int worldx, int worldy, int spriteNumber )
