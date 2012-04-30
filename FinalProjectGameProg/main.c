@@ -685,12 +685,7 @@ void despawnMissile()
 void updateVampire()
 {
     int count;
-<<<<<<< Updated upstream
     for( count = 0; count < VAMPIRE_COUNT; count++)
-=======
-    int vampireCount = 3;
-    for( count = 0; count < vampireCount; count++)
->>>>>>> Stashed changes
     {
 	   if (spriteHandlers[4+count].alive == true)
 	   {
