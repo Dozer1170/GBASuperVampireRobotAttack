@@ -14,6 +14,8 @@
 #define VAMPIRE_HANDLER spriteHandlers[4]
 #define VAMPIRE_SPRITE sprites[4]
 
+#define VAMPIRE_COUNT 3
+
 
 #define GROUND 0
 #define AIR 1
@@ -388,9 +390,18 @@ bool checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 	return false;
 }
 
-bool checkVampireSpriteCollision() {
-   //for all the vampires
-   return checkSpriteCollision(&MAIN_HANDLER, &spriteHandlers[4]);
+boolean checkVampireSpriteCollisions() {
+	int x = 0;
+	static int timer = 30;
+	
+    //Check all the vampires  
+    for (x = 0; x < VAMPIRE_COUNT; x++)
+    {
+		if (checkSpriteCollision(&MAIN_HANDLER, &spriteHandlers[4+x]) && timer == 0)
+		{
+			return true;
+		}
+    }
 }
 
 void InitSprites() {

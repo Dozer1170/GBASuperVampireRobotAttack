@@ -425,7 +425,7 @@ void Update() {
 
    updateMissile();
    updateVampire();
-   if(checkVampireSpriteCollision()) {
+   if(checkVampireSpriteCollisions()) {
       if(MAIN_HANDLER.recentlyHit == 0) {
          takeDamage(&MAIN_HANDLER, 50);
          MAIN_HANDLER.recentlyHit = 60;
@@ -685,8 +685,7 @@ void despawnMissile()
 void updateVampire()
 {
     int count;
-    int vampireCount = 2;
-    for( count = 0; count < vampireCount; count++)
+    for( count = 0; count < VAMPIRE_COUNT; count++)
     {
 	   if (spriteHandlers[4+count].alive == true)
 	   {
