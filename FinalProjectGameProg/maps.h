@@ -14,6 +14,7 @@
 #include "BackgroundSource/outdoorlandscape.raw.c"
 #include "BackgroundSource/gameover.raw.c"
 #include "BackgroundSource/win.raw.c"
+#include "BackgroundSource/loading.raw.c"
 
 //Nuclear bomb image from: brookwoodhistory.wikispaces.com
 
@@ -68,11 +69,17 @@ void copyColumn(int screenXCol, int screenYOff, int bgYOff, int bgColumn,
 	u16* toMap, const u16* fromMap, int mapWidth)
 {
 	screenXCol = screenXCol % 32;
-	int i;
+	int i, bgIndex;
 	for(i = 0; i < 32; i++)
 	{
-		toMap[screenXCol + ((i+screenYOff)%32) * 32] =
-			fromMap[bgColumn+(mapWidth*(i+bgYOff))];
+      bgIndex = bgColumn+(mapWidth*(i+bgYOff));
+      if(bgIndex < level.mapSize) {
+   		toMap[screenXCol + ((i+screenYOff)%32) * 32] =
+   			fromMap[bgIndex];
+      } else {
+         toMap[screenXCol + ((i+screenYOff)%32) * 32] =
+   			fromMap[2];
+      }
 	}
 }
 //ScreenYRow: the row in our 256x256 background to copy to
@@ -80,11 +87,17 @@ void copyColumn(int screenXCol, int screenYOff, int bgYOff, int bgColumn,
 void copyRow(int screenXOff, int screenYRow, int bgXOff, int bgRow,
 	u16* toMap, const u16* fromMap, int mapWidth)
 {
-	int i;
+	int i, bgIndex;
 	for(i = 0; i < 32; i++)
 	{
-      toMap[((i+screenXOff)%32) + screenYRow * 32] =
-         fromMap[(bgXOff + i) + (mapWidth*bgRow)];
+      bgIndex = (bgXOff + i) + (mapWidth*bgRow);
+      if(bgIndex < level.mapSize) {
+         toMap[((i+screenXOff)%32) + screenYRow * 32] =
+            fromMap[bgIndex];
+      } else {
+         toMap[((i+screenXOff)%32) + screenYRow * 32] =
+            fromMap[2];
+      }
 	}
 }
 
@@ -116,7 +129,7 @@ void InitMaps() {
    	level.tileSize = 4160;
    	level.srcMap = factorylevel_Map;
    	level.destMap = levelMap;
-   	level.goal.lx = 2320;
+   	level.goal.lx = 2330;
       level.goal.ly = 736;
       level.goal.rx = 2367;
       level.goal.ry = 767;
@@ -171,11 +184,11 @@ void InitMaps() {
    	level.goal.rx = 780;
    	level.goal.ry = 200;
 
-   	hitmap.levelWidth = 600;
-   	hitmap.levelHeight = 200;
-   	hitmap.pixelXMax = 4800;
-   	hitmap.pixelYMax = 1600;
-   	hitmap.mapSize = 120000;
+   	hitmap.levelWidth = 300;
+   	hitmap.levelHeight = 100;
+   	hitmap.pixelXMax = 2400;
+   	hitmap.pixelYMax = 800;
+   	hitmap.mapSize = 30000;
    	hitmap.srcMap = outdoorhitmap_Map;
 
    	bg.x = 16, bg.y = 16;

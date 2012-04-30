@@ -115,7 +115,6 @@ void gameOver();
 void takeDamage(SpriteHandler *sprite, int damage) 
 {
 	static int dmgDX;
-	static int lastTime;
 	int x, y, n;
 	
 	if(sprite->health - damage < 1)
@@ -180,7 +179,7 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 		rval = 1;
 	} else if( PINK == color ) {
       rval = 1;
-      takeDamage(sprite, 1);
+      takeDamage(sprite, 10);
    }
 	return rval;
 }
@@ -191,7 +190,10 @@ bool checkSolidCollision(SpriteHandler *sprite, int x, int y) {
 //angle values based upon what it it
 bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	bool rval = 0;
-	int tileStart = hitmap.srcMap[(x/8) + (level.levelWidth * (y/8))] * 64;
+	int srcIndex = (x/8) + (level.levelWidth * (y/8));
+	if(srcIndex >= hitmap.mapSize)
+      return 0;
+	int tileStart = hitmap.srcMap[srcIndex] * 64;
 	int pixel = hitmap_Tiles[tileStart + (x%8) + (8*(y%8))];
 	int color = level_Palette[pixel];
 	if(RED == color || BLUE == color || PURPLE == color) {
@@ -220,7 +222,7 @@ bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	}
 	if(PINK == color) {
       rval = 1;
-      takeDamage(sprite, 1);
+      takeDamage(sprite, 10);
    }
 	return rval;
 }
@@ -343,44 +345,7 @@ void move(SpriteHandler *sprite, int x, int y) {
 	}
 }
 
-
-
-void moveOther(SpriteHandler *sprite, int x, int y) 
-{
-   int newX;
-	if(sprite->mode == GROUND) {
-      int newY = sprite->worldy;
-		if((newX = checkCDSensors(sprite, x, y)) == -1) {
-	        newY = checkABSensors(sprite,x,y);
-	        if(newY == -1) {
-				sprite->mode = AIR;
-				sprite->yspd = sprite->yspd + 1;
-	        }
-		} else {
-         x = newX;
-      }
-		setSpriteLoc(sprite,x,newY);
-	} else if(sprite->mode == AIR) {
-      int newY =  checkABSensors(sprite,x,y);
-		if(newY == -1 || sprite->yspd < 0) { //in air
-         newY = checkEFSensors(sprite,x,y);
-         if((newX = checkCDSensors(sprite,x,newY)) != -1) {
-			   x = newX;
-		   }
-			setSpriteLoc(sprite,x,newY);
-		} else { //landed
-			sprite->mode = GROUND;
-			sprite->yspd = 0;
-			setSpriteLoc(sprite,x,newY);
-		}
-	}
-	
-	
-}
-
-
-
-boolean checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
+bool checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 {
 	if (sprite1->x == 240 || sprite2->x == 240)
 	{// One of the sprites is offscreen

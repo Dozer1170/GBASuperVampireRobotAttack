@@ -123,7 +123,7 @@ void MyHandler(void)
                 //reset length
                 SampleLength = 0;
 
-				missileFire = false;
+				    missileFire = false;
             }
         }
     }

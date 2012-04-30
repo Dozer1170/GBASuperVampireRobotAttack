@@ -24,7 +24,7 @@
 #endif
 
 //Set Custom Interrupt
-SetInterupt()
+void SetInterupt()
 {
     REG_IME = 0x00;
     REG_INTERRUPT = (unsigned int)MyHandler;

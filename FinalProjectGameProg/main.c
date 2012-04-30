@@ -50,7 +50,6 @@ void UpdateSpriteMemory(void)
 }
 
 void Initialize() {
-	SetMode(0x0 | BG0_ENABLE | BG1_ENABLE | OBJ_ENABLE | OBJ_MAP_1D);
 	InitMaps();
 	InitSprites();
 	SetInterupt();
@@ -131,16 +130,24 @@ void LoadContent() {
 		x++;
 	}
 	nextSprite = n;
+}
 
-	
+void loadFullscreenBitmap(u16 *bitmap) {
+   DMAFastCopy(bitmap, videoBuffer, 19200, DMA_32NOW);
+}
+
+inline void EnableScreen() {
+   SetMode(0x0 | OBJ_ENABLE | OBJ_MAP_1D | BG0_ENABLE | BG1_ENABLE);
 }
 
 void reset() {
    needReset = false;
    currLevel = 0;
+   SetMode(0x0);
    Initialize();
-   LoadContent();
    WaitVBlank();
+   EnableScreen();
+   LoadContent();
 }
 
 void resetAfterLoop() {
@@ -148,17 +155,8 @@ void resetAfterLoop() {
 }
 
 void gameOver() {
-	SetMode(MODE_3 | BG2_ENABLE);
-
-	extern const unsigned short gameover_Bitmap[];
-
-	int x, y;
-	for(y = 0; y < 160; y++)
-	{
-		for(x = 0; x < 240; x++)
-			DrawPixel3(x,y,gameover_Bitmap[y*240 + x]);
-	}
-	
+   SetMode(MODE_3 | BG2_ENABLE);
+	loadFullscreenBitmap(gameover_Bitmap);
 	while(!key_hit(KEY_START)) {
       ButtonPoll();
    }
@@ -179,25 +177,23 @@ bool withinGoal() {
 void nextLevel() {
    if(currLevel >= maxLevel) {
       SetMode(MODE_3 | BG2_ENABLE);
-
-   	extern const unsigned short win_Bitmap[];
-
-   	int x, y;
-   	for(y = 0; y < 160; y++)
-   	{
-   		for(x = 0; x < 240; x++)
-   			DrawPixel3(x,y,win_Bitmap[y*240 + x]);
-   	}
-
+      loadFullscreenBitmap(win_Bitmap);
    	while(!key_hit(KEY_START)) {
          ButtonPoll();
       }
       resetAfterLoop();
    } else {
+      SetMode(MODE_3 | BG2_ENABLE);
+      loadFullscreenBitmap(loading_Bitmap);
+      while(!key_hit(KEY_START)) {
+         ButtonPoll();
+      }
+      SetMode(0x0);
       currLevel++;
       Initialize();
-      LoadContent();
       WaitVBlank();
+      EnableScreen();
+      LoadContent();
    }
 }
 
@@ -226,7 +222,7 @@ void moveXDir()
 {
     if(key_is_down(KEY_LEFT))
     {
-        if(!SampleLength || key_was_up(KEY_LEFT) && MAIN_HANDLER.mode == GROUND && !missileFire)
+        if((!SampleLength || key_was_up(KEY_LEFT)) && (MAIN_HANDLER.mode == GROUND) && !missileFire)
             PlaySound(&s_move);
 
         if( MAIN_HANDLER.dir == -1)
@@ -251,7 +247,7 @@ void moveXDir()
     }
     if(key_is_down(KEY_RIGHT))
     {
-        if(!SampleLength || key_was_up(KEY_RIGHT) && MAIN_HANDLER.mode == GROUND && !missileFire)
+        if((!SampleLength || key_was_up(KEY_RIGHT)) && MAIN_HANDLER.mode == GROUND && !missileFire)
             PlaySound(&s_move);
         
         if( MAIN_HANDLER.dir == 1)
@@ -412,7 +408,7 @@ void Update() {
    if(MAIN_HANDLER.y >= 0 && MAIN_HANDLER.y < 160)
    	MAIN_SPRITE.attribute0 = SET_Y(MAIN_SPRITE.attribute0, MAIN_HANDLER.y);
    else if(MAIN_HANDLER.y >= 160)
-      resetAfterLoop();
+      gameOver();
 
    updateMissile();
    updateVampire();
@@ -458,8 +454,8 @@ void Draw() {
    WaitVBlank();
 	UpdateSpriteMemory();
 	DrawLevelBackground();
-	
-	
+
+
 /*	if (missile)
 	{
 		MISSILE_SPRITE.attribute0 -= level.y - oldVOFFS;
@@ -490,6 +486,7 @@ void Draw() {
 
 int main()
 {
+   EnableScreen();
 	Initialize();
 	LoadContent();
 	while(1)
@@ -640,13 +637,6 @@ void updateMissile()
 			despawnMissile();
 		}
 	
-	
-	
-	
-	
-	
-			
-	
 		if (missileDX % 8 == 0)
 		{
 			if (MISSILE_HANDLER.dir == 1)
@@ -738,7 +728,7 @@ void updateVampire()
 		
 		boolean goodX, goodY;
 
-		moveOther(&spriteHandlers[4], spriteHandlers[4].worldx + spriteHandlers[4].xspd, spriteHandlers[4].worldy + spriteHandlers[4].yspd);
+		move(&spriteHandlers[4], spriteHandlers[4].worldx + spriteHandlers[4].xspd, spriteHandlers[4].worldy + spriteHandlers[4].yspd);
 		
 		if(spriteHandlers[4].x < 240 && spriteHandlers[4].x >= 0)
 		{
