@@ -72,8 +72,6 @@ void LoadContent() {
    DMAFastCopy((void*)bg_Tiles,(void*)CharBaseBlock(2),
 		bg.tileSize/4,DMA_32NOW);
 	DMAFastCopy((void*)missilePalette,(void*)SpritePal,256,DMA_16NOW);
-
-	SpritePal[66] = RGB(31,31,31);
 	
 	int nextSprite = 0;
 	
@@ -594,19 +592,12 @@ void updateMissile()
 	else if (missile == true)
 	{					
 		int goodX, goodY;
-		
-
 
 		MISSILE_HANDLER.x += MISSILE_HANDLER.xspd;
 		MISSILE_HANDLER.worldx += MISSILE_HANDLER.xspd;
 			
-	
-	
 		setSpriteLoc(&MISSILE_HANDLER, MISSILE_HANDLER.worldx, MISSILE_HANDLER.worldy);
-	
-	
-	
-	
+
 		if(MISSILE_HANDLER.x < 240 && MISSILE_HANDLER.x > 0)
 		{
 			MISSILE_SPRITE.attribute1 = SET_X(MISSILE_SPRITE.attribute1, MISSILE_HANDLER.x);
@@ -625,8 +616,7 @@ void updateMissile()
 		{
 			goodY = false;
 		}
-		
-		
+				
 		if (goodX && goodY)
 		{
 			MISSILE_SPRITE.attribute0 = SET_MODE(MISSILE_SPRITE.attribute0, SPRITE_ENABLE);
@@ -649,10 +639,7 @@ void updateMissile()
 			}
 			MISSILE_SPRITE.attribute2=NextFrameLocation(&(MISSILE_HANDLER.running));
 		}	
-		missileDX++;
-		
-		
-		
+		missileDX++;	
 	}
 	// END MISSILE UPDATE~~~~~~~~~~~~~~~~~~~~~	
 } // End updateMissile() function
@@ -674,29 +661,20 @@ void despawnMissile()
 	missileDX = 0;
 }
 
-
-
 void updateVampire()
 {
     int count;
     int vampireCount = 2;
     for( count = 0; count < vampireCount; count++)
     {
-	if (spriteHandlers[4+count].alive == true)
-	{
-		if(spriteHandlers[4+count].mode == AIR)
-		{
-			if(spriteHandlers[4+count].yspd < 10)
-				spriteHandlers[4+count].yspd = spriteHandlers[4+count].yspd + .25;
-		}
-	
-	
-	
-	
-	
-	
-	
-		if (spriteHandlers[4+count].onScreen] == true)
+	   if (spriteHandlers[4+count].alive == true)
+	   {
+            if(spriteHandlers[4+count].mode == AIR)
+            {
+                if(spriteHandlers[4+count].yspd < 10)
+				    spriteHandlers[4+count].yspd = spriteHandlers[4+count].yspd + .25;
+            }
+		if (spriteHandlers[4+count].onScreen == true)
 		{
 			//Move toward the main character
 			if (MAIN_HANDLER.x < spriteHandlers[4+count].x)
@@ -721,31 +699,26 @@ void updateVampire()
 			}
 		}
 	
-	
-	
-	
-	
-	
 		else if (REG_TM2D % 6)
 		{
 			if (rand() % 10 == 0)
 			{//Change direction
 				
-				if (spriteHandlers[4+count].dir == 1)
-				{//Flip left
-					sprites[4].attribute1 |= HORIZONTAL_FLIP;
-					spriteHandlers[4+count].dir = -1;
-					spriteHandlers[4+count].flipped = true;
-				}
-				else
-				{//Flip Right
-					sprites[4+count].attribute1 &= ~HORIZONTAL_FLIP;
-					spriteHandlers[4+count].dir = 1;
-					spriteHandlers[4+count].flipped = false;
-				}
-			}
-			else
-			{//Keep moving
+				    if (spriteHandlers[4+count].dir == 1)
+				    {//Flip left
+					   sprites[4].attribute1 |= HORIZONTAL_FLIP;
+					   spriteHandlers[4+count].dir = -1;
+					   spriteHandlers[4+count].flipped = true;
+				    }
+				    else
+				    {//Flip Right
+                        sprites[4+count].attribute1 &= ~HORIZONTAL_FLIP;
+					    spriteHandlers[4+count].dir = 1;
+					    spriteHandlers[4+count].flipped = false;
+				    }
+			 }
+			 else
+			 {//Keep moving
 				if (spriteHandlers[4+count].dir == 1)
 				{//Go right
 					sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
