@@ -425,13 +425,17 @@ void Update() {
 
    updateMissile();
    updateVampire();
-   if(checkVampireSpriteCollisions()) {
+   if(checkVampireSpriteCollisions(&MAIN_HANDLER) != -1) {
       if(MAIN_HANDLER.recentlyHit == 0) {
-         takeDamage(&MAIN_HANDLER, 50);
-         MAIN_HANDLER.recentlyHit = 60;
+         takeDamage(&MAIN_HANDLER, 25);
+         MAIN_HANDLER.recentlyHit = 120;
       }
-      else
-         MAIN_HANDLER.recentlyHit--;
+      else {
+         if(MAIN_HANDLER.recentlyHit > 0) {
+            MAIN_HANDLER.recentlyHit--;
+            doFlash(&MAIN_HANDLER, &MAIN_SPRITE);
+         }
+      }
       
    }
    moveViewport();
@@ -521,6 +525,7 @@ int main()
 
 void updateMissile()
 {
+   int vamp;
 	if (recentlyShot)
 	{
 		MAIN_SPRITE.attribute2 = SPRITE_CHUNKS32_SQUARE * 8;
@@ -553,17 +558,17 @@ void updateMissile()
 	{// Check horizontal collision with map.
 		recentlyHit = 15;
 	}
-	else if (missile && checkSpriteCollision(&MISSILE_HANDLER, &spriteHandlers[4]))
+	else if (missile && (vamp  = checkVampireSpriteCollisions(&MISSILE_HANDLER)) != -1)
 	{// Check to see if missile hit vampire
 	
 		recentlyHit = 15;
 		
-		spriteHandlers[4].health -= 50;
+		spriteHandlers[4 + vamp].health -= 50;
 		
-		if (spriteHandlers[4].health == 0)
+		if (spriteHandlers[4 + vamp].health == 0)
 		{
 			recentlyDied = 30;
-			spriteHandlers[4].alive = false;
+			spriteHandlers[4 + vamp].alive = false;
 		}
 	}
 	else if (key_hit(KEY_B) && missile == false)
@@ -764,10 +769,10 @@ void updateVampire()
 	}
 	else
 	{// Dead
-		if (spriteHandlers[4+count].recentlyDied)
+		if (recentlyDied)
 		{// Flickery death
 			
-			if (spriteHandlers[4+count].recentlyDied % 5 == 0)
+			if (recentlyDied % 5 == 0)
 			{
 				sprites[4+count].attribute0 &= 0xFF00;
 				sprites[4+count].attribute0 |= 160;
@@ -787,7 +792,7 @@ void updateVampire()
 			
 			recentlyDied--;
 			
-			if (spriteHandlers[4+count].recentlyDied == 0)
+			if (recentlyDied == 0)
 			{
 				sprites[4+count].attribute0 &= 0xFF00;
 				sprites[4+count].attribute0 |= 160;

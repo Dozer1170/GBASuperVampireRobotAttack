@@ -16,7 +16,6 @@
 
 int VAMPIRE_COUNT;
 
-
 #define GROUND 0
 #define AIR 1
 
@@ -84,7 +83,6 @@ typedef struct tagSpriteHandler
 	int totalFuel;
 	int health;
 	int recentlyHit;
-	int recentlyDied;
 	boolean onScreen;
 	boolean passed;
 	AngleInfo angle;
@@ -150,6 +148,22 @@ void takeDamage(SpriteHandler *sprite, int damage)
          }
       }
    }
+}
+
+void doFlash(SpriteHandler *spriteH, Sprite *sprite) {
+   if (spriteH->recentlyHit)
+	{
+			if (spriteH->recentlyHit % 5 == 0)
+			{
+				sprite->attribute0 &= 0xFF00;
+				sprite->attribute0 |= 160;
+
+				sprite->attribute1 &= 0xFE00;
+				sprite->attribute1 |= 240;
+			}
+
+			spriteH->recentlyHit--;
+		}
 }
 
 int NextFrameLocation(AnimationHandler *handler) {
@@ -382,7 +396,7 @@ bool checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 	}
 	else
 	{// Sprite 2 on left
-		if (sprite2->x + sprite2->hitBox.xOffset + sprite2->hitBox.width > sprite1->x - sprite1->width)
+		if (sprite2->x + sprite2->hitBox.xOffset + sprite2->hitBox.width > sprite1->x + sprite1->hitBox.xOffset)
 		{
 			return true;
 		}
@@ -391,18 +405,18 @@ bool checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 	return false;
 }
 
-boolean checkVampireSpriteCollisions() {
+int checkVampireSpriteCollisions(SpriteHandler *sprite) {
 	int x = 0;
-	static int timer = 30;
 	
     //Check all the vampires  
     for (x = 0; x < VAMPIRE_COUNT; x++)
     {
-		if (checkSpriteCollision(&MAIN_HANDLER, &spriteHandlers[4+x]) && timer == 0)
+		if (checkSpriteCollision(sprite, &spriteHandlers[4+x]))
 		{
-			return true;
+			return x;
 		}
     }
+    return -1;
 }
 
 void InitSprites() {
@@ -421,6 +435,7 @@ void InitSprites() {
 	// Initialize robot sprite
 	MAIN_HANDLER.mainCharacter = true;
 	MAIN_HANDLER.alive = 1;
+	MAIN_HANDLER.recentlyHit = 0;
 	MAIN_HANDLER.flipped = 0;
 	MAIN_HANDLER.width = 32;
 	MAIN_HANDLER.height = 32;
