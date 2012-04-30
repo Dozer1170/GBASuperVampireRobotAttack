@@ -14,7 +14,7 @@
 #define VAMPIRE_HANDLER spriteHandlers[4]
 #define VAMPIRE_SPRITE sprites[4]
 
-#define VAMPIRE_COUNT 3
+int VAMPIRE_COUNT;
 
 
 #define GROUND 0
@@ -515,14 +515,31 @@ void InitSprites() {
 	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
 
-    initVampires( 200, 10, 4);
-    initVampires( 770,415,5);
-    initVampires( 750,670,6);
-    //initVampires( 1100,360,7);
-    //initVampires( 1920,730,8);
-    //initVampires( 2015,730,9);
-    //initVampires( 2220,730,10);
-    //initVampires( 470,150,11);
+    if( currLevel == 0 )
+    {
+        VAMPIRE_COUNT = 8;
+        initVampires( 200, 10, 4);
+        initVampires( 770,415,5);
+        initVampires( 750,670,6);
+        initVampires( 1100,360,7);
+        initVampires( 1920,730,8);
+        initVampires( 2015,730,9);
+        initVampires( 2220,730,10);
+        initVampires( 470,150,11);
+    }
+    if( currLevel == 1 )
+    {
+        VAMPIRE_COUNT = 9;
+        initVampires(309,33,4);
+        initVampires(402,303,5);
+        initVampires(740,720,6);
+        initVampires(1233,730,7);
+        initVampires(1830,640,8);
+        initVampires(1900,640,9);
+        initVampires(2230,460,10);
+        initVampires(798,183,11);
+        initVampires(840,183,12);
+    }
 }
 
 void initVampires( int worldx, int worldy, int spriteNumber )
