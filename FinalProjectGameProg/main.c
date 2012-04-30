@@ -146,8 +146,9 @@ void reset() {
    SetMode(0x0);
    Initialize();
    WaitVBlank();
-   EnableScreen();
    LoadContent();
+   Update();
+   EnableScreen();
 }
 
 void resetAfterLoop() {
@@ -192,8 +193,9 @@ void nextLevel() {
       currLevel++;
       Initialize();
       WaitVBlank();
-      EnableScreen();
       LoadContent();
+      Update();
+      EnableScreen();
    }
 }
 
