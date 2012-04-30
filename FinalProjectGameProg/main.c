@@ -490,6 +490,15 @@ void Draw() {
 		MISSILE_HANDLER.x -= level.x - oldHOFFS;
 	}
 */
+
+   if (recentlyHit)
+   {
+      MISSILE_SPRITE.attribute0 -= level.y - oldVOFFS;
+		MISSILE_HANDLER.y -= level.y -oldVOFFS;
+		MISSILE_SPRITE.attribute1 -= level.x - oldHOFFS;
+		MISSILE_HANDLER.x -= level.x - oldHOFFS;
+   }
+
 	if (recentlyDied)
 	{
 		spriteHandlers[4].y -= level.y - oldVOFFS;
