@@ -39,6 +39,7 @@ sound s_shoot = {&fire, 8000, 11164};
 void updateMissile();
 void despawnMissile();
 void updateVampire();
+void Update();
 
 inline void DrawPixel3(int x, int y, unsigned short c)
 {
@@ -412,6 +413,15 @@ void Update() {
 
    updateMissile();
    updateVampire();
+   if(checkVampireSpriteCollision()) {
+      if(MAIN_HANDLER.recentlyHit == 0) {
+         takeDamage(&MAIN_HANDLER, 50);
+         MAIN_HANDLER.recentlyHit = 60;
+      }
+      else
+         MAIN_HANDLER.recentlyHit--;
+      
+   }
    moveViewport();
 }
 

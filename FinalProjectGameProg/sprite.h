@@ -65,12 +65,13 @@ typedef struct tagAngleInfo {
 
 typedef struct tagSpriteHandler
 {
+   bool mainCharacter;
 	int x, y;
 	int mode;
 	int worldx, worldy;
 	float acc, dec, xspd, yspd;
 	float gspd, maxGspd;
-    float jumpStr;
+   float jumpStr;
 	int width, height;
 	int alive;
 	int dir;
@@ -78,6 +79,7 @@ typedef struct tagSpriteHandler
 	int fuel;
 	int totalFuel;
 	int health;
+	int recentlyHit;
 	boolean onScreen;
 	boolean passed;
 	AngleInfo angle;
@@ -108,7 +110,7 @@ typedef struct OBJ_AFFINE
 Sprite sprites[128];
 
 // Sprite Handler array
-SpriteHandler spriteHandlers[128];
+SpriteHandler spriteHandlers[20];
 
 void gameOver();
 
@@ -117,29 +119,30 @@ void takeDamage(SpriteHandler *sprite, int damage)
 	static int dmgDX;
 	int x, y, n;
 	
-	if(sprite->health - damage < 1)
-		gameOver();
-	else
-    {
-		sprite->health -= damage;
-		dmgDX += damage;
-		
-		
-		while (dmgDX - 10 > 0)
-		{
-			//Load lower health bar
-			HEALTHBAR_HANDLER.idle.currFrame++;
-					
-			x = SPRITE_DATA32_SQUARE * 9;
-			y = HEALTHBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
-			for (n = 0; n < SPRITE_DATA64_TALL; n++)
-			{
-				SpriteData[x] = barsData[n + y];
-				x++;
-			}
-			dmgDX -= 10;
-		}
-	}
+	if(sprite->mainCharacter) {
+   	if(sprite->health - damage < 1) {
+            gameOver();
+      }
+   	else
+      {
+         sprite->health -= damage;
+         dmgDX += damage;
+         while (dmgDX - 10 > 0)
+   		{
+   			//Load lower health bar
+   			HEALTHBAR_HANDLER.idle.currFrame++;
+
+   			x = SPRITE_DATA32_SQUARE * 9;
+   			y = HEALTHBAR_HANDLER.idle.currFrame * SPRITE_DATA64_TALL;
+   			for (n = 0; n < SPRITE_DATA64_TALL; n++)
+   			{
+   				SpriteData[x] = barsData[n + y];
+   				x++;
+   			}
+   			dmgDX -= 10;
+         }
+      }
+   }
 }
 
 int NextFrameLocation(AnimationHandler *handler) {
@@ -381,7 +384,10 @@ bool checkSpriteCollision(SpriteHandler *sprite1, SpriteHandler *sprite2)
 	return false;
 }
 
-
+bool checkVampireSpriteCollision() {
+   //for all the vampires
+   return checkSpriteCollision(&MAIN_HANDLER, &spriteHandlers[4]);
+}
 
 void InitSprites() {
     int n;
@@ -393,7 +399,11 @@ void InitSprites() {
 		sprites[n].attribute1 = 240;
 	}
 	
+	for(n = 0; n < 128; n++)
+      spriteHandlers[n].mainCharacter = false;
+	
 	// Initialize robot sprite
+	MAIN_HANDLER.mainCharacter = true;
 	MAIN_HANDLER.alive = 1;
 	MAIN_HANDLER.flipped = 0;
 	MAIN_HANDLER.width = 32;
@@ -432,6 +442,8 @@ void InitSprites() {
 	MAIN_HANDLER.hitBox.yOffset = 0;
 	MAIN_HANDLER.hitBox.negYOffset = 0;
 	MAIN_HANDLER.hitBox.negXOffset = 6;
+	MAIN_HANDLER.hitBox.width = 18;
+	MAIN_HANDLER.hitBox.height = 32;
 	MAIN_HANDLER.worldx = MAIN_HANDLER.x + level.x;
 	MAIN_HANDLER.worldy = MAIN_HANDLER.y + level.y;
 	MAIN_HANDLER.fuel = 40;
