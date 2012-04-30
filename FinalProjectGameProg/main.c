@@ -690,7 +690,43 @@ void updateVampire()
 				spriteHandlers[4+count].yspd = spriteHandlers[4+count].yspd + .25;
 		}
 	
-		if (REG_TM2D % 6)
+	
+	
+	
+	
+	
+	
+		if (spriteHandlers[4+count].onScreen] == true)
+		{
+			//Move toward the main character
+			if (MAIN_HANDLER.x < spriteHandlers[4+count].x)
+			{//Main character to the left of vampire
+			
+				//Make sure facing left
+				sprites[4].attribute1 |= HORIZONTAL_FLIP;
+				spriteHandlers[4+count].dir = -1;
+				spriteHandlers[4+count].flipped = true;
+				
+				spriteHandlers[4+count].xspd = -1;
+			}
+			else
+			{//Main character to the right of vampire
+			
+				//Make sure facing right
+				sprites[4+count].attribute1 &= ~HORIZONTAL_FLIP;
+				spriteHandlers[4+count].dir = 1;
+				spriteHandlers[4+count].flipped = false;
+				
+				spriteHandlers[4+count].xspd = 1;
+			}
+		}
+	
+	
+	
+	
+	
+	
+		else if (REG_TM2D % 6)
 		{
 			if (rand() % 10 == 0)
 			{//Change direction
