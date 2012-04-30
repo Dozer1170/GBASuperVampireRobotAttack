@@ -650,7 +650,6 @@ void despawnMissile()
 	MISSILE_SPRITE.attribute1 &= 0xFE00;
 	MISSILE_SPRITE.attribute1 |= 240;
 	MISSILE_HANDLER.x = 240;
-			
 	MISSILE_SPRITE.attribute0 &= 0xFF00;
 	MISSILE_SPRITE.attribute1 |= 160;
 	MISSILE_HANDLER.y = 160;
@@ -681,7 +680,7 @@ void updateVampire()
 			{//Main character to the left of vampire
 			
 				//Make sure facing left
-				sprites[4].attribute1 |= HORIZONTAL_FLIP;
+				sprites[4+count].attribute1 |= HORIZONTAL_FLIP;
 				spriteHandlers[4+count].dir = -1;
 				spriteHandlers[4+count].flipped = true;
 				
@@ -697,6 +696,7 @@ void updateVampire()
 				
 				spriteHandlers[4+count].xspd = 1;
 			}
+			sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
 		}
 	
 		else if (REG_TM2D % 6)
@@ -706,7 +706,7 @@ void updateVampire()
 				
 				    if (spriteHandlers[4+count].dir == 1)
 				    {//Flip left
-					   sprites[4].attribute1 |= HORIZONTAL_FLIP;
+					   sprites[4+count].attribute1 |= HORIZONTAL_FLIP;
 					   spriteHandlers[4+count].dir = -1;
 					   spriteHandlers[4+count].flipped = true;
 				    }
@@ -721,13 +721,11 @@ void updateVampire()
 			 {//Keep moving
 				if (spriteHandlers[4+count].dir == 1)
 				{//Go right
-					sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
 					spriteHandlers[4+count].xspd = 1;
 					
 				}
 				else
 				{//Go left
-					sprites[4+count].attribute2 = NextFrameLocation(&(spriteHandlers[4+count].running));
 					spriteHandlers[4+count].xspd = -1;
 				}
 			}
