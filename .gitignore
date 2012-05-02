@@ -12,5 +12,14 @@ FinalProjectGameProg/*.elf
 FinalProjectGameProg/*.zip
 FinalProjectGameProg/*.gba
 FinalProjectGameProg/*.stackdump
+SuperRobotVampireAttack.elf
+SuperRobotVampireAttack.gba
+SuperRobotVampireAttack.vhw
+SuperRobotVampireAttack.vhw.bak
+cc1.exe.stackdump
+crt0.o
+main.i
+main.o
+makefile
 *.zip
 .gitignore~
