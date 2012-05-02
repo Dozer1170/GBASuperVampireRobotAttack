@@ -115,7 +115,10 @@ Sprite sprites[128];
 // Sprite Handler array
 SpriteHandler spriteHandlers[20];
 
+// Prototypes
 void gameOver();
+void initVampires( int worldx, int worldy, int spriteNumber );
+
 
 void takeDamage(SpriteHandler *sprite, int damage)
 {
@@ -246,7 +249,7 @@ bool checkSolidPixelCollisionSet(SpriteHandler *sprite, int x, int y) {
 	}
 	if(PINK == color) {
       rval = 1;
-      takeDamage(sprite, 10);
+      takeDamage(sprite, 2);
    }
 	return rval;
 }
@@ -530,6 +533,14 @@ void InitSprites() {
 	spriteHandlers[3].dir = 1;
 	spriteHandlers[3].flipped = 0;
 	spriteHandlers[3].xspd = 0;
+	
+	
+	sprites[3].attribute0 &= 0xFF00;
+	sprites[3].attribute0 |= 160;
+	sprites[3].attribute1 &= 0xFE00;
+	sprites[3].attribute1 |= 240;
+	
+	
 
     if( currLevel == 0 )
     {
@@ -555,6 +566,8 @@ void InitSprites() {
         initVampires(2230,460,10);
         initVampires(798,183,11);
         initVampires(840,183,12);
+		
+		
     }
 }
 
@@ -587,8 +600,12 @@ void initVampires( int worldx, int worldy, int spriteNumber )
 	
 	spriteHandlers[spriteNumber].dir = 1;
 	spriteHandlers[spriteNumber].x = 240;
+	sprites[spriteNumber].attribute1 &= 0xFE00;
+	sprites[spriteNumber].attribute1 |= 240;
 	spriteHandlers[spriteNumber].worldx = worldx;
 	spriteHandlers[spriteNumber].y = 160;	
+	sprites[spriteNumber].attribute0 &= 0xFF00;
+	sprites[spriteNumber].attribute0 |= 160;
 	spriteHandlers[spriteNumber].worldy = worldy;
 	
 	spriteHandlers[spriteNumber].yspd = 0;

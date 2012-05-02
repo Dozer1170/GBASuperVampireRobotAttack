@@ -12,8 +12,6 @@
 #define INT_VBLANK 		0x0001
 
 //define some timer and DMA registers/values
-#define REG_TM0D 		*(volatile unsigned short*)0x4000100
-#define REG_TM0CNT 		*(volatile unsigned short*)0x4000102
 #define REG_DMA1SAD 	*(volatile unsigned int*)0x40000BC
 #define REG_DMA1DAD 	*(volatile unsigned int*)0x40000C0
 #define REG_DMA1CNT_H 	*(volatile unsigned short*)0x40000C6
@@ -24,7 +22,7 @@
 #define DMA_ENABLE_NEW 	32768
 #define DMA_TIMING_SYNC_TO_DISPLAY 0x1000 | 0x2000 //4096 8192
 
-//define some sound hardware registers/values
+//define some sound hardware registers/values
 #define REG_SGCNT0_H 			*(volatile unsigned short*)0x4000082
 #define REG_SGCNT1 				*(volatile unsigned short*)0x4000084
 #define DSOUND_A_RIGHT_CHANNEL 	0x100 //256
@@ -53,7 +51,7 @@
 #define DSB_TIMER1 				0x4000
 #define DSB_FIFO_RESET 			0x8000
 
-unsigned short SamplePosition = 0;
+short SamplePosition = 0;
 unsigned short SampleLength = 0;
 bool missileFire = false;
 
@@ -115,7 +113,7 @@ void MyHandler(void)
         if (SampleLength)
         {
             SamplePosition++;
-            if (SamplePosition > SampleLength || SamplePosition == -1)
+            if ( (SamplePosition > SampleLength) || SamplePosition == -1)
             {
                 //stop playback: disable the timer and DMA
                 REG_TM0CNT = 0;

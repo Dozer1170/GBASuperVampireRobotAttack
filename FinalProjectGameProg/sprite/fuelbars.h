@@ -1,7 +1,7 @@
-/**********************************************\
-*       fuelbars.h                                   *
-*          by dovotos pcx->gba program         *
-/**********************************************/
+/**********************************************
+*       fuelbars.h                            *
+*          by dovotos pcx->gba program        *
+**********************************************/
 #define  fuelbars_WIDTH   32
 #define  fuelbars_HEIGHT  704
 

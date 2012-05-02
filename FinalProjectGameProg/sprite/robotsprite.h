@@ -1,6 +1,6 @@
-/*********************************************
-*       robotsprite.h                                   *
-*          by dovotos pcx->gba program         *
+/********************************************
+*       robotsprite.h                       *
+*          by dovotos pcx->gba program      *
 *********************************************/
 #define  robotsprite_WIDTH   32
 #define  robotsprite_HEIGHT  288
