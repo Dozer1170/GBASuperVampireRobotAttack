@@ -352,6 +352,7 @@ void fuelUpdate()
 }
 
 void Update() {
+	int vamp;
    if(needReset)
       reset();
    if(withinGoal())
@@ -432,8 +433,8 @@ void Update() {
 
    updateMissile();
    updateVampire();
-   if(checkVampireSpriteCollisions(&MAIN_HANDLER) != -1) {
-      if(MAIN_HANDLER.recentlyHit == 0) {
+   if( (vamp = checkVampireSpriteCollisions(&MAIN_HANDLER)) != -1) {
+      if(MAIN_HANDLER.recentlyHit == 0 && recentlyDied[vamp] == 0) {
          takeDamage(&MAIN_HANDLER, 25);
          MAIN_HANDLER.recentlyHit = 120;
       }
