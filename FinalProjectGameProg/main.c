@@ -430,13 +430,10 @@ void Update() {
          takeDamage(&MAIN_HANDLER, 25);
          MAIN_HANDLER.recentlyHit = 120;
       }
-      else {
-         if(MAIN_HANDLER.recentlyHit > 0) {
-            MAIN_HANDLER.recentlyHit--;
-            doFlash(&MAIN_HANDLER, &MAIN_SPRITE);
-         }
-      }
-      
+   }
+   if(MAIN_HANDLER.recentlyHit > 0) {
+         MAIN_HANDLER.recentlyHit--;
+         doFlash(&MAIN_HANDLER, &MAIN_SPRITE);
    }
    moveViewport();
 }
